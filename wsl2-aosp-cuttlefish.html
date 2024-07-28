@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Reddit+Mono&display=swap');
+body {
+  font-family: "Noto Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
+}
+code, pre {
+  font-family: "Reddit Mono", monospace;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+pre {
+  overflow-x: scroll;
+  background-color: #ececf8;
+}
+a:link, a:visited {
+  color: hsl(220deg 60% 40%);
+}
+</style>
+</head>
+<body>
+<p><a href="/">(index)</a></p>
+<h1>2024-07-28. Running Cuttlefish virtual Android device on WSL2</h1><p>I needed to test out some patches for AOSP having only a Windows machine.</p>
+<p>The <a href="https://source.android.com/docs/setup/create/avd">Goldfish Android Emulator</a> was not enough; I had to use the <a href="https://source.android.com/docs/devices/cuttlefish">Cuttlefish virtual device</a>.</p>
+<p>Using Cuttlefish in WSL2 wasn&rsquo;t officially supported at the time of writing.</p>
+<h3>Details</h3>
+<p>I succeeded running it at the manifest hash <a href="https://android.googlesource.com/platform/manifest/+/81e549decdee241c84d305c2ccc1bd2a73fc2eb2">81e549decdee241c84d305c2ccc1bd2a73fc2eb2</a> which was the latest main at the time of the attempt.</p>
+<p>I followed <a href="https://source.android.com/docs/setup/download">Download the Android source</a>, then <a href="https://source.android.com/docs/setup/build/building">Build Android</a>.</p>
+<p>I used the lunch target <code>aosp_cf_x86_64_phone-trunk_staging-eng</code>.</p>
+<p>The I tried to run CVD using <code>launch_cvd</code>. It was not in my <code>$PATH</code>, but after running <code>envsetup</code> again, it got into my <code>$PATH</code>.</p>
+<h3>Too many open files</h3>
+<p>The first error I had was:</p>
+<pre><code>[2024-07-27T18:08:00.444004939+00:00 ERROR devices::virtio::virtio_pci_device] failed to activate device: pcivirtio-sound failed to clone interrupt_evt: Too many open files (os error 24)
+[2024-07-27T18:08:00.444020599+00:00 ERROR devices::virtio::virtio_pci_device] failed to activate device: pcivirtio-sound failed to clone interrupt_evt: Too many open files (os error 24)
+[2024-07-27T18:08:00.444035299+00:00 ERROR devices::virtio::virtio_pci_device] failed to activate device: pcivirtio-sound failed to clone interrupt_evt: Too many open files (os error 24)
+[2024-07-27T18:08:00.444043389+00:00 ERROR devices::virtio::virtio_pci_device] failed to activate device: pcivirtio-sound failed to clone interrupt_evt: Too many open files (os error 24)
+[2024-07-27T18:08:00.444051219+00:00 ERROR devices::virtio::virtio_pci_device] failed to activate device: pcivirtio-sound failed to clone interrupt_evt: Too many open files (os error 24)
+[2024-07-27T18:08:00.444065098+00:00 ERROR devices::virtio::virtio_pci_device] failed to activate device: pcivirtio-sound failed to clone interrupt_evt: Too many open files (os error 24)
+</code></pre>
+<p>Reason: my Debian in WSL2 had a very low <code>ulimit -n</code>, just 1024.</p>
+<p>Fix: bump to 8192 with <code>ulimit -n 8192</code>.</p>
+<h3>The architecture failed to build the vm</h3>
+<p>The second error I had was:</p>
+<pre><code>[2024-07-27T18:52:02.351063572+00:00 ERROR crosvm] exiting with error 1: the architecture failed to build the vm
+Caused by:
+    failed to create a PCI root hub: failed to create proxy device: Failed to configure tube: failed to receive packet: Connection reset by peer (os error 104)
+Detected unexpected exit of monitored subprocess /home/line/aosp-main/out/host/linux-x86/bin/process_restarter
+Subprocess /home/line/aosp-main/out/host/linux-x86/bin/process_restarter (27196) has exited with exit code 1
+Stopping all monitored processes due to unexpected exit of critical process
+</code></pre>
+<p>Reason: <a href="https://groups.google.com/a/chromium.org/g/crosvm-dev/c/dSjhjDKZsLI">something going wrong with sandboxing?</a></p>
+<p>Fix: invoke cvd with <code>launch_cvd --enable-sandbox=false</code>. I do not know the negative consequences of this.</p>
+<h3>See the device UI</h3>
+<p>To see the CVD UI, I used the Web UI. I am not sure if it is documented anywhere. By default an httpd spins up on port 8443.</p>
+<p>To get it from outside WSL2:</p>
+<pre><code>netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=8443 connectaddress=192.168.219.62 connectport=8443
+</code></pre>
+<p>The IP address above is the IP address of the WSL2 instance. May vary.</p>
+<p>Optional, to access the Web UI from other nodes in the local network:</p>
+<pre><code>netsh advfirewall firewall add rule name=”Open Port 8443 for WSL2” dir=in action=allow protocol=TCP localport=8443
+</code></pre>
+<p>The UI is a bit finicky. It did not work in Safari for me. Rebooting CVD sometimes caused the picture to disappear. Reloading and reopening the device helped at times.</p>
+</body>
+</html>
