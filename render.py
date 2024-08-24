@@ -20,6 +20,7 @@ code, pre {
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
+  color: hsl(220deg 73% 24%);
 }
 pre {
   overflow-x: scroll;
