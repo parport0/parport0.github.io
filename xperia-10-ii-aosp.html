@@ -195,12 +195,12 @@ ld.lld: error: undefined hidden symbol: _ZNSt3__14swapB8ne190000IiEENS_9enable_i
 clang++: error: linker command failed with exit code 1 (use -v to see invocation)
 </code></pre>
 <p>For the curious, <code>objdump -Ct out/target/product/pdx201/obj/EXECUTABLES/android.hardware.biometrics.fingerprint@2.1-service.sony_intermediates/egistec/EgisFpDevice.o</code> shows that this symbol demangles into <code>std::__1::enable_if&lt;is_move_constructible&lt;int&gt;::value&amp;&amp;is_move_assignable&lt;int&gt;::value, void&gt;::type std::__1::swap[abi:ne190000]&lt;int&gt;(int&amp;, int&amp;)</code>.</p>
-<p>android.hardware.biometrics.fingerprint@2.1-service.sony has to go for now :(</p>
-<p>This means that our device loses android.hardware.fingerprint, meaning that</p>
+<p>Initially I just removed android.hardware.biometrics.fingerprint@2.1-service.sony from PRODUCT_PACKAGES.</p>
+<p>This meant that our device lost android.hardware.fingerprint, meaning that</p>
 <pre><code>PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.fingerprint.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.fingerprint.xml
 </code></pre>
-<p>needs to be removed, otherwise the device will not boot, logs of such failure for your convenience:</p>
+<p>needed to be removed, otherwise the device would not boot; logs of such failure for your convenience:</p>
 <pre><code>08-11 18:37:29.991  8668  8897 W HidlToAidlSensorAdapter: NoSuchElementException
 08-11 18:37:29.991  8668  8897 W HidlToAidlSensorAdapter: java.util.NoSuchElementException
 08-11 18:37:29.991  8668  8897 W HidlToAidlSensorAdapter:       at android.os.HwBinder.getService(Native Method)
@@ -279,6 +279,8 @@ clang++: error: linker command failed with exit code 1 (use -v to see invocation
 08-11 18:37:30.180  8461  8461 I Zygote  : Process 8668 exited due to signal 9 (Killed)
 08-11 18:37:30.180  8461  8461 E Zygote  : Exit zygote because system server (pid 8668) has terminated
 </code></pre>
+<p>But spending a bit more time on this error later on, I discovered that this error message plainly means &ldquo;vendor/oss/fingerprint/egistec/EgisFpDevice.cpp does not include <code>&lt;utility&gt;</code>&rdquo;. Adding <code>&lt;utility&gt;</code> fixes this error.</p>
+<p>This error is specific to LLVM&rsquo;s libc++. There is an inclusion chain happening, where vendor/oss/fingerprint/FormatException.hpp includes <code>&lt;exception&gt;</code>, and that eventually pulls in is_swappable.h; and is_swappable declares std::swap the way it is declared in the linker error. Including <code>&lt;utility&gt;</code> pulls in an implementation of std::swap with swap.h. I <a href="https://github.com/llvm/llvm-project/issues/106007">complained</a> about this error message unclarity on LLVM&rsquo;s issue tracker; seemed to be a known issue.</p>
 <h2 id="flashing">Flashing<a class="headerlink" href="#flashing" title="Permanent link">#</a></h2>
 <p>For this device:</p>
 <ul>

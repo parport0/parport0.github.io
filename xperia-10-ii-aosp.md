@@ -240,14 +240,14 @@ clang++: error: linker command failed with exit code 1 (use -v to see invocation
 
 For the curious, `objdump -Ct out/target/product/pdx201/obj/EXECUTABLES/android.hardware.biometrics.fingerprint@2.1-service.sony_intermediates/egistec/EgisFpDevice.o` shows that this symbol demangles into `std::__1::enable_if<is_move_constructible<int>::value&&is_move_assignable<int>::value, void>::type std::__1::swap[abi:ne190000]<int>(int&, int&)`.
 
-android.hardware.biometrics.fingerprint@2.1-service.sony has to go for now :(
+Initially I just removed android.hardware.biometrics.fingerprint@2.1-service.sony from PRODUCT_PACKAGES.
 
-This means that our device loses android.hardware.fingerprint, meaning that
+This meant that our device lost android.hardware.fingerprint, meaning that
 ```
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.fingerprint.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.fingerprint.xml
 ```
-needs to be removed, otherwise the device will not boot, logs of such failure for your convenience:
+needed to be removed, otherwise the device would not boot; logs of such failure for your convenience:
 ```
 08-11 18:37:29.991  8668  8897 W HidlToAidlSensorAdapter: NoSuchElementException
 08-11 18:37:29.991  8668  8897 W HidlToAidlSensorAdapter: java.util.NoSuchElementException
@@ -327,6 +327,10 @@ needs to be removed, otherwise the device will not boot, logs of such failure fo
 08-11 18:37:30.180  8461  8461 I Zygote  : Process 8668 exited due to signal 9 (Killed)
 08-11 18:37:30.180  8461  8461 E Zygote  : Exit zygote because system server (pid 8668) has terminated
 ```
+
+But spending a bit more time on this error later on, I discovered that this error message plainly means "vendor/oss/fingerprint/egistec/EgisFpDevice.cpp does not include `<utility>`". Adding `<utility>` fixes this error.
+
+This error is specific to LLVM's libc++. There is an inclusion chain happening, where vendor/oss/fingerprint/FormatException.hpp includes `<exception>`, and that eventually pulls in is_swappable.h; and is_swappable declares std::swap the way it is declared in the linker error. Including `<utility>` pulls in an implementation of std::swap with swap.h. I [complained](https://github.com/llvm/llvm-project/issues/106007) about this error message unclarity on LLVM's issue tracker; seemed to be a known issue.
 
 ## Flashing
 
