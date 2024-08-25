@@ -27,21 +27,30 @@ pre {
 a:link, a:visited {
   color: hsl(220deg 60% 40%);
 }
+a.headerlink {
+  text-decoration: none;
+  margin-left: 0.5em;
+  color: hsl(360deg, 0%, 77%)
+}
+a.headerlink:hover {
+  text-decoration: underline;
+  color: hsl(360deg, 0%, 43%)
+}
 </style>
 </head>
 <body>
 <p><a href="/">(index)</a></p>
-<h1>2024-08-25. Building Android main for an Xperia 10 II (Sony Open Devices supported device)</h1><p>I was curious how easy would it be to build AOSP for a device that I had lying around that is part of the <a href="https://developer.sony.com/open-source/aosp-on-xperia-open-devices">Sony Open Devices Program</a>.</p>
+<h1 id="2024-08-25-building-android-main-for-an-xperia-10-ii-sony-open-devices-supported-device">2024-08-25. Building Android main for an Xperia 10 II (Sony Open Devices supported device)<a class="headerlink" href="#2024-08-25-building-android-main-for-an-xperia-10-ii-sony-open-devices-supported-device" title="Permanent link">#</a></h1><p>I was curious how easy would it be to build AOSP for a device that I had lying around that is part of the <a href="https://developer.sony.com/open-source/aosp-on-xperia-open-devices">Sony Open Devices Program</a>.</p>
 <p>The device in question is at the time of writing still supported, and was in the far-right column of the <a href="https://developer.sony.com/supported-devices-and-functionality">supported devices list</a>.</p>
 <p>My device was already unlocked beforehand.</p>
-<h2>Device</h2>
+<h2 id="device">Device<a class="headerlink" href="#device" title="Permanent link">#</a></h2>
 <p>There are two devices listed under &ldquo;Xperia 10 II&rdquo; in the supported devices list: XQ-AU51 and XQ-AU52. That doesn&rsquo;t help with understanding which lunch target to use for the device I got on my hands.</p>
 <p>The <a href="https://developer.sony.com/open-source/aosp-on-xperia-open-devices/get-started/supported-devices-maintained">&ldquo;Resources&rdquo;</a> page helpfully linked to the right <a href="https://github.com/sonyxperiadev/device-sony-pdx201">device folder</a> for these devices. There I could see that <a href="https://github.com/sonyxperiadev/device-sony-pdx201/blob/master/aosp_xqau52.mk">the &ldquo;aosp_xqau52&rdquo; target</a> fully inherits the &ldquo;aosp_xqau51&rdquo; target, but setting the &ldquo;dual sim&rdquo; setting to true. My device has two sim card slots.</p>
 <p>From the device.mk file in the same folder I could also see that this device inherits from the &ldquo;seine&rdquo; platform.</p>
 <p>I was curious where the UART was. <a href="https://developer.sony.com/open-source/aosp-on-xperia-open-devices/guides/access-uart-ports">There is a page for that</a>, with a drop-down menu hidden at the very bottom of the page, stating that for this device one should somehow access the MicroSD card pins for reading from the UART.</p>
 <p>I was lucky to have had an adapter called <a href="https://www.hardkernel.com/shop/emmc-module-reader-board-for-os-upgrade/">&ldquo;eMMC Module Reader Board for OS upgrade&rdquo;</a> from Hardkernel, designed to let one read eMMC modules made for Odroid devices. It cost $1.50 at the time of writing. I just had to desolder the connector and solder on some PTFE wires to the correct pins. An alternative would be to get one of those &ldquo;Micro SD extension cables&rdquo; that I could see being sold for around $12. The PCB had to be inserted into the phone directly without using the MicroSD/SIM card tray.</p>
 <p>Speed is 115200; standard 8-n-1.</p>
-<h2>Sync</h2>
+<h2 id="sync">Sync<a class="headerlink" href="#sync" title="Permanent link">#</a></h2>
 <p>The device being still supported let me use the Sony <a href="https://developer.sony.com/open-source/aosp-on-xperia-open-devices/guides/aosp-build-instructions/build-aosp-android-14/">AOSP Android 14 build instruction</a>. I modified the repo init step, as I wanted to build main instead of 14.</p>
 <p>(At the time of writing, the Sony instruction pointed to android-14.0.0_r50, which was not really that old. Android 14 was the latest major release.)</p>
 <pre><code>repo init --partial-clone -b main -u https://android.googlesource.com/platform/manifest
@@ -60,7 +69,7 @@ repo sync -c -j8
 <pre><code>./repo_update.sh
 </code></pre>
 <p>Looking at the suspicious script, I gathered that its function was to apply patches from <a href="https://android-review.googlesource.com/">the AOSP Gerrit</a>. It was applying two patches. <a href="https://android-review.googlesource.com/q/Iad92c39fb729538cf51bf9d9037b15515104b453">The first one</a> was adding a definition of in_addr_t to bionic. <a href="https://android-review.googlesource.com/q/I250006ba6fe9d91e765dde1e4534d5d87aaab879">The second one</a> was explicitly marked as &ldquo;only for internal SODP use&rdquo; and was fixing an uninitialized use of a variable in hardware/interfaces/thermal/1.0/default/Thermal.cpp. I wonder why that one is still unfixed in main.</p>
-<h2>Build</h2>
+<h2 id="build">Build<a class="headerlink" href="#build" title="Permanent link">#</a></h2>
 <p>Continuing on with the documentation:</p>
 <pre><code>source build/envsetup.sh &amp;&amp; lunch
 </code></pre>
@@ -100,7 +109,7 @@ line@DESKTOP-NNM4931:~/aosp-main$
 make
 </code></pre>
 <p>I had some build errors.</p>
-<h3>Specifies both LOCAL_SDK_VERSION (system_34) and LOCAL_PRIVATE_PLATFORM_APIS (true)</h3>
+<h3 id="specifies-both-local_sdk_version-system_34-and-local_private_platform_apis-true">Specifies both LOCAL_SDK_VERSION (system_34) and LOCAL_PRIVATE_PLATFORM_APIS (true)<a class="headerlink" href="#specifies-both-local_sdk_version-system_34-and-local_private_platform_apis-true" title="Permanent link">#</a></h3>
 <pre><code>[ 81% 91/111] including vendor/oss/timekeep/Android.mk ...
 FAILED:
 vendor/oss/timekeep/Android.mk: error: TimeKeep: Specifies both LOCAL_SDK_VERSION (system_34) and LOCAL_PRIVATE_PLATFORM_APIS (true) but should specify only one
@@ -116,7 +125,7 @@ build/make/core/sdk_check.mk:34: error: done.
 <p>Actually reading the error message, there is <a href="https://cs.android.com/android/platform/superproject/main/+/main:build/make/core/sdk_check.mk;l=31?q=build%2Fmake%2Fcore%2Fsdk_check.mk">a check</a> verifying that LOCAL_PRIVATE_PLATFORM_APIS and LOCAL_SDK_VERSION are not set simultaneously. The TimeKeep Android.mk sets LOCAL_PRIVATE_PLATFORM_APIS, wishing to use hidden APIs, but LOCAL_SDK_VERSION is not set there. It is first set <a href="https://cs.android.com/android/platform/superproject/main/+/main:build/make/core/local_systemsdk.mk;l=35?q=local_current_sdk.mk%20&amp;ss=android%2Fplatform%2Fsuperproject%2Fmain">to system_current</a> by the AOSP makefiles if a component &ldquo;_cannot_use_platform_apis&rdquo;; and also if so, later it is <a href="https://cs.android.com/android/platform/superproject/main/+/main:build/make/core/local_current_sdk.mk;l=19">set to system_34</a> (because now &ldquo;apks and jars in the vendor or odm partitions cannot use system SDK 35 and beyond&rdquo;), and that&rsquo;s where system_34 comes from in the error message.</p>
 <p>So, LOCAL_SDK_VERSION gets set if the module is on the wrong side of Treble. So move it back to the correct side by not setting LOCAL_PROPRIETARY_MODULE. That seems to be the only way because, per git log again, &ldquo;the package depends on private APIs such as android.os.SystemProperties&rdquo;.</p>
 <p>The check <a href="https://android-review.googlesource.com/c/platform/build/+/622851">appeared</a> in Android P ~ Android Q times, so not sure how it should be working&hellip;</p>
-<h3>VINTF compatibility</h3>
+<h3 id="vintf-compatibility">VINTF compatibility<a class="headerlink" href="#vintf-compatibility" title="Permanent link">#</a></h3>
 <pre><code>FAILED: build out/target/product/pdx201/obj/PACKAGING/check_vintf_all_intermediates/check_vintf_compatible.log
 &lt;...&gt;
 ERROR: No such file or directory: Cannot find framework matrix at FCM version 4.: No such file or directory
@@ -150,7 +159,7 @@ The following instances are in the device manifest but not specified in framewor
     vendor.somc.hardware.modemswitcher@1.0::IModemSwitcher/default
 </code></pre>
 <p>&ldquo;in the device manifest but not specified in framework compatibility matrix&rdquo; &mdash; the device provides something, but the framework doesn&rsquo;t ask for that. I couldn&rsquo;t find any FCM snippets in the codebase mentioning these APIs. I didn&rsquo;t find anything better to do than comment those entries out from the manifests files included in the DEVICE_MANIFEST_FILE array.</p>
-<h3>Misc errors</h3>
+<h3 id="misc-errors">Misc errors<a class="headerlink" href="#misc-errors" title="Permanent link">#</a></h3>
 <pre><code>build/make/core/base_rules.mk:300: error: device/sony/common/rootdir: MODULE.TARGET.ETC.init.usb.rc already defined by system/core/rootdir.
 </code></pre>
 <p>Sony has a prebuilt_etc called init.usb.rc, and a different module with the same name <a href="https://android-review.googlesource.com/c/platform/system/core/+/2926193">was added</a> for V. I renamed the Sony module to init.usb.sony.rc and modified the mention in PRODUCT_PACKAGES in device/sony/common/common-init.mk.</p>
@@ -270,7 +279,7 @@ clang++: error: linker command failed with exit code 1 (use -v to see invocation
 08-11 18:37:30.180  8461  8461 I Zygote  : Process 8668 exited due to signal 9 (Killed)
 08-11 18:37:30.180  8461  8461 E Zygote  : Exit zygote because system server (pid 8668) has terminated
 </code></pre>
-<h2>Flashing</h2>
+<h2 id="flashing">Flashing<a class="headerlink" href="#flashing" title="Permanent link">#</a></h2>
 <p>For this device:</p>
 <ul>
 <li>Power + VolUp goes to Fastboot (blue LED)</li>
@@ -292,7 +301,7 @@ fastboot flash product product.img
 fastboot flash userdata userdata.img
 fastboot erase metadata
 </code></pre>
-<h2>No serial</h2>
+<h2 id="no-serial">No serial<a class="headerlink" href="#no-serial" title="Permanent link">#</a></h2>
 <p>Sony Open Devices has a <a href="https://github.com/sonyxperiadev/bug_tracker">separate repository serving as a bug tracker</a>.</p>
 <p>When I flashed the device, I had no logs from the kernel, the last line of the bootloader stating:</p>
 <pre><code>EFI_UdonStop Stop DebugPort for anti-corroding
@@ -312,7 +321,7 @@ cd kernel/sony/msm-4.19/common-kernel
 m bootimage
 </code></pre>
 <p>I also modified the value of PLATFORMS in kernel/sony/msm-4.19/common-kernel/build_shared_vars.sh to make sure the script only builds the kernel for seine.</p>
-<h2>bpffs labeling</h2>
+<h2 id="bpffs-labeling">bpffs labeling<a class="headerlink" href="#bpffs-labeling" title="Permanent link">#</a></h2>
 <p>The device wouldn&rsquo;t boot. It was stuck on the Android logo, SystemUI not starting. Luckily, ADB was appearing a couple of minutes into the boot (quite unstable at first, but stable later on).</p>
 <pre><code>08-11 18:34:25.347  6356  6356 E jniClatCoordinator: context of '/sys/fs/bpf/net_shared' is 'u:object_r:fs_bpf:s0' != 'u:object_r:fs_bpf_net_shared:s0'
 08-11 18:34:25.347  6356  6356 E jniClatCoordinator: context of '/sys/fs/bpf/net_shared/prog_clatd_schedcls_egress4_clat_rawip' is 'u:object_r:fs_bpf:s0' != 'u:object_r:fs_bpf_net_shared:s0'

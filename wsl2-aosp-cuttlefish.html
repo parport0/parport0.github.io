@@ -27,19 +27,28 @@ pre {
 a:link, a:visited {
   color: hsl(220deg 60% 40%);
 }
+a.headerlink {
+  text-decoration: none;
+  margin-left: 0.5em;
+  color: hsl(360deg, 0%, 77%)
+}
+a.headerlink:hover {
+  text-decoration: underline;
+  color: hsl(360deg, 0%, 43%)
+}
 </style>
 </head>
 <body>
 <p><a href="/">(index)</a></p>
-<h1>2024-07-28. Running Cuttlefish virtual Android device on WSL2</h1><p>I needed to test out some patches for AOSP having only a Windows machine.</p>
+<h1 id="2024-07-28-running-cuttlefish-virtual-android-device-on-wsl2">2024-07-28. Running Cuttlefish virtual Android device on WSL2<a class="headerlink" href="#2024-07-28-running-cuttlefish-virtual-android-device-on-wsl2" title="Permanent link">#</a></h1><p>I needed to test out some patches for AOSP having only a Windows machine.</p>
 <p>The <a href="https://source.android.com/docs/setup/create/avd">Goldfish Android Emulator</a> was not enough; I had to use the <a href="https://source.android.com/docs/devices/cuttlefish">Cuttlefish virtual device</a>.</p>
 <p>Using Cuttlefish in WSL2 wasn&rsquo;t officially supported at the time of writing.</p>
-<h3>Details</h3>
+<h3 id="details">Details<a class="headerlink" href="#details" title="Permanent link">#</a></h3>
 <p>I succeeded running it at the manifest hash <a href="https://android.googlesource.com/platform/manifest/+/81e549decdee241c84d305c2ccc1bd2a73fc2eb2">81e549decdee241c84d305c2ccc1bd2a73fc2eb2</a> which was the latest main at the time of the attempt.</p>
 <p>I followed <a href="https://source.android.com/docs/setup/download">Download the Android source</a>, then <a href="https://source.android.com/docs/setup/build/building">Build Android</a>.</p>
 <p>I used the lunch target <code>aosp_cf_x86_64_phone-trunk_staging-eng</code>.</p>
 <p>The I tried to run CVD using <code>launch_cvd</code>. It was not in my <code>$PATH</code>, but after running <code>envsetup</code> again, it got into my <code>$PATH</code>.</p>
-<h3>Too many open files</h3>
+<h3 id="too-many-open-files">Too many open files<a class="headerlink" href="#too-many-open-files" title="Permanent link">#</a></h3>
 <p>The first error I had was:</p>
 <pre><code>[2024-07-27T18:08:00.444004939+00:00 ERROR devices::virtio::virtio_pci_device] failed to activate device: pcivirtio-sound failed to clone interrupt_evt: Too many open files (os error 24)
 [2024-07-27T18:08:00.444020599+00:00 ERROR devices::virtio::virtio_pci_device] failed to activate device: pcivirtio-sound failed to clone interrupt_evt: Too many open files (os error 24)
@@ -50,7 +59,7 @@ a:link, a:visited {
 </code></pre>
 <p>Reason: my Debian in WSL2 had a very low <code>ulimit -n</code>, just 1024.</p>
 <p>Fix: bump to 8192 with <code>ulimit -n 8192</code>.</p>
-<h3>The architecture failed to build the vm</h3>
+<h3 id="the-architecture-failed-to-build-the-vm">The architecture failed to build the vm<a class="headerlink" href="#the-architecture-failed-to-build-the-vm" title="Permanent link">#</a></h3>
 <p>The second error I had was:</p>
 <pre><code>[2024-07-27T18:52:02.351063572+00:00 ERROR crosvm] exiting with error 1: the architecture failed to build the vm
 Caused by:
@@ -61,7 +70,7 @@ Stopping all monitored processes due to unexpected exit of critical process
 </code></pre>
 <p>Reason: <a href="https://groups.google.com/a/chromium.org/g/crosvm-dev/c/dSjhjDKZsLI">something going wrong with sandboxing?</a></p>
 <p>Fix: invoke cvd with <code>launch_cvd --enable-sandbox=false</code>. I do not know the negative consequences of this.</p>
-<h3>See the device UI</h3>
+<h3 id="see-the-device-ui">See the device UI<a class="headerlink" href="#see-the-device-ui" title="Permanent link">#</a></h3>
 <p>To see the CVD UI, I used the Web UI. I am not sure if it is documented anywhere. By default an httpd spins up on port 8443.</p>
 <p>To get it from outside WSL2:</p>
 <pre><code>netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=8443 connectaddress=192.168.219.62 connectport=8443

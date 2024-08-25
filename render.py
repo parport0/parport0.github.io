@@ -30,6 +30,15 @@ pre {
 a:link, a:visited {
   color: hsl(220deg 60% 40%);
 }
+a.headerlink {
+  text-decoration: none;
+  margin-left: 0.5em;
+  color: hsl(360deg, 0%, 77%)
+}
+a.headerlink:hover {
+  text-decoration: underline;
+  color: hsl(360deg, 0%, 43%)
+}
 </style>
 </head>
 <body>
@@ -50,16 +59,21 @@ def wrap_html(html: str) -> str:
     return html_header + html + html_footer
 
 toc_text = ""
-markdown_exts = ['fenced_code', 'smarty', 'meta']
-md = markdown.Markdown(extensions=markdown_exts)
+markdown_exts = ['fenced_code', 'smarty', 'meta', 'toc']
+markdown_ext_configs = { 'toc': { 'permalink': '#' }}
+md = markdown.Markdown(extensions=markdown_exts, extension_configs=markdown_ext_configs)
 
 for file in os.scandir():
     if file.is_file() and file.name.endswith('.md'):
         with open(file.name, "r", encoding="utf-8") as input_file:
             md_text = input_file.read()
         html = md.reset().convert(md_text)
+
+        # TOC
         # Run this while the metadata is still there --- before the next convert()
         toc_text += "- [" + md_to_title(md) + "](/" + to_html(file.name) + ")\n"
+
+        # Page headers
         # The 'meta' extension does not allow parsing metadata without
         # converting the text into html.
         # It also doesn't allow using fields from meta in the result.
@@ -68,6 +82,7 @@ for file in os.scandir():
         up_md = "[(index)](/)\n"
         html = md.reset().convert(up_md + title_md) + html
         html = wrap_html(html)
+
         # "errors" and "encoding" -- from https://python-markdown.github.io/reference/
         with open(to_html(file.name), "w", encoding="utf-8", errors="xmlcharrefreplace") as output_file:
             output_file.write(html)
