@@ -15,12 +15,13 @@ body {
   font-style: normal;
   font-variation-settings: "wdth" 100;
 }
-code, pre {
+code {
   font-family: "Reddit Mono", monospace;
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
   color: hsl(220deg 73% 24%);
+  overflow-wrap: break-word;
 }
 pre {
   overflow-x: scroll;
