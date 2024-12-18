@@ -39,6 +39,10 @@ a.headerlink:hover {
   text-decoration: underline;
   color: hsl(360deg, 0%, 43%)
 }
+img.illustration {
+  max-width:600px;
+  width:100%;
+}
 </style>
 </head>
 <body>
@@ -58,10 +62,11 @@ def md_to_title(md: markdown.Markdown) -> str:
 def wrap_html(html: str) -> str:
     return html_header + html + html_footer
 
-toc_text = ""
 markdown_exts = ['fenced_code', 'smarty', 'meta', 'toc']
 markdown_ext_configs = { 'toc': { 'permalink': '#' }}
 md = markdown.Markdown(extensions=markdown_exts, extension_configs=markdown_ext_configs)
+
+toc_entries = {}
 
 for file in os.scandir():
     if file.is_file() and file.name.endswith('.md'):
@@ -71,7 +76,7 @@ for file in os.scandir():
 
         # TOC
         # Run this while the metadata is still there --- before the next convert()
-        toc_text += "- [" + md_to_title(md) + "](/" + to_html(file.name) + ")\n"
+        toc_entries[md.Meta['date'][0]] = "- [" + md_to_title(md) + "](/" + to_html(file.name) + ")\n"
 
         # Page headers
         # The 'meta' extension does not allow parsing metadata without
@@ -87,6 +92,8 @@ for file in os.scandir():
         with open(to_html(file.name), "w", encoding="utf-8", errors="xmlcharrefreplace") as output_file:
             output_file.write(html)
 
+toc_sorted = sorted(toc_entries.items(), reverse=True)
+toc_text = "".join(v for k, v in toc_sorted)
 toc_html = md.reset().convert(toc_text)
 toc_html = wrap_html(toc_html)
 with open("index.html", "w", encoding="utf-8", errors="xmlcharrefreplace") as output_file:

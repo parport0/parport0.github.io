@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Reddit+Mono&display=swap');
+body {
+  font-family: "Noto Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
+}
+code {
+  font-family: "Reddit Mono", monospace;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  color: hsl(220deg 73% 24%);
+  overflow-wrap: break-word;
+}
+pre {
+  overflow-x: scroll;
+  background-color: #ececf8;
+}
+a:link, a:visited {
+  color: hsl(220deg 60% 40%);
+}
+a.headerlink {
+  text-decoration: none;
+  margin-left: 0.5em;
+  color: hsl(360deg, 0%, 77%)
+}
+a.headerlink:hover {
+  text-decoration: underline;
+  color: hsl(360deg, 0%, 43%)
+}
+img.illustration {
+  max-width:600px;
+  width:100%;
+}
+</style>
+</head>
+<body>
+<p><a href="/">(index)</a></p>
+<h1 id="2024-12-18-hiby-r2-hardware-teardown">2024-12-18. HiBy R2 hardware teardown<a class="headerlink" href="#2024-12-18-hiby-r2-hardware-teardown" title="Permanent link">#</a></h1><p>I received a HiBy R2 player that was &ldquo;broken; not turning on&rdquo;. Since it was really not turning on even after spending several hours connected to a USB charger, I decided to disassemble it.</p>
+<p>To disassemble HiBy R2, you need to apply heat to the back panel (opposite from the display) and pry gently using plastic tools. Be very careful with the glass. Applying both heat and isopropyl alcohol works well; pour some into the slightly-visible gap that appears when you pry. Pay attention to not get any under the display; I accidentally did and now there is a visible stain when the display is on.</p>
+<p><img src="hiby-r2-back-panel-removed.jpg" class="illustration"></p>
+<p>Next there are four screws, a plactic bracket that contains an antenna (do not break the cable), and a battery. The battery posed a challenge because it was taped to the shield on the PCB below with a huge piece of double-sided tape. I slowly pried with a &ldquo;pick&rdquo;-type plastic tool. This is very dangerous.</p>
+<p><img src="hiby-r2-battery-removed.jpg" class="illustration"></p>
+<p>I measured the voltage between the battery contacts and it was showing me 2.3V. That is in the &ldquo;over-discharged&rdquo; range.</p>
+<p>Later on I soldered some leads to the battery contacts on the PCB. Applying 3.8V allowed the player to turn on. This means that: the player can not be powered purely through USB, and the player itself is functioning well. According to the power supply, a powered off player still consumed 0.18A. This explained how the battery got so discharged.</p>
+<p>Some of the components:</p>
+<ul>
+<li>SoC: Ingenic X1000E (XBurst 2, mips32r5)</li>
+<li>WiFi, Bluetooth: AMPAK AP6256 (same as seen on some X1000 devboards, like Halley5)</li>
+<li>Display panel: LCD-29553-001/111-1, also known as Samsung SMD LMS245DC08 (same as Blackberry Bold 9790)</li>
+<li>Display panel controller: Solomon Systech SSD2805c (MIPI bridge)</li>
+<li>Touch panel controller: Goodix GT917S (same as PinePhone Pro!)</li>
+<li>Flash: ATO ATO25D1GA, NAND, quad SPI capable</li>
+<li>Power management: AXP192</li>
+</ul>
+<p>Pictures:</p>
+<p><img src="hiby-r2-pcb.jpg" class="illustration" /></p>
+<p><img src="hiby-r2-pcb-shield-removed-upper-half.jpg" class="illustration" /></p>
+<p><img src="hiby-r2-pcb-shield-removed-bottom-half.jpg" class="illustration" /></p>
+<p><img src="hiby-r2-pcb-back.jpg" class="illustration" /></p>
+<p><img src="hiby-r2-lcd-touch.jpg" class="illustration" /></p>
+</body>
+</html>
