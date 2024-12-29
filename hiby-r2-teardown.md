@@ -11,6 +11,12 @@ Next there are four screws, a plactic bracket that contains an antenna (do not b
 
 <img src="hiby-r2-battery-removed.jpg" class="illustration">
 
+The battery is soldered on to the PCB.
+
+If you wish to also remove the PCB from the case, unplug all the flex cables and pry the PCB out; there is nothing else holding it in place.
+
+When you remove the PCB, all the device's buttons are going to fall out, except for, possibly, the power button. It is somewhat taped on to the case, but the tape is very weak.
+
 I measured the voltage between the battery contacts and it was showing me 2.3V. That is in the "over-discharged" range.
 
 Later on I soldered some leads to the battery contacts on the PCB. Applying 3.8V allowed the player to turn on. This means that: the player can not be powered purely through USB, and the player itself is functioning well. According to the power supply, a powered off player still consumed 0.18A. This explained how the battery got so discharged.
