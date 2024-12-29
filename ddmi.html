@@ -46,20 +46,24 @@ img.illustration {
 <p><a href="/">(index)</a></p>
 <h1 id="2024-12-22-implementing-ddmidvi-on-an-hdmi-connector-video-output-on-a-lakritz-ecp5-fpga-board">2024-12-22. Implementing DDMI/DVI-on-an-HDMI-connector video output on a Lakritz ECP5 FPGA board<a class="headerlink" href="#2024-12-22-implementing-ddmidvi-on-an-hdmi-connector-video-output-on-a-lakritz-ecp5-fpga-board" title="Permanent link">#</a></h1><p>This is a strange note; my Verilog module file was more-than-half comment lines,
 so I &ldquo;inverted&rdquo; it and turned it into an .md file with less-than-half of it being code snippets.</p>
+<p>Articles exist on the Internet about this topic, but I wished they explained more
+of the &ldquo;why&rdquo;, not only the &ldquo;how&rdquo;.</p>
+<p>I am not proficient at neither Verilog nor video standards. Please email me if something is wrong and irks you.</p>
 <h3 id="ddmi-stands-for-differential-data-multiple-interface">DDMI stands for &ldquo;Differential Data Multiple Interface&rdquo;.<a class="headerlink" href="#ddmi-stands-for-differential-data-multiple-interface" title="Permanent link">#</a></h3>
 <p>The connector on the board is an HDMI connector.</p>
 <p>The signals I send are DVI signals.</p>
-<p>DDMI is different from for example GPDI (General-Purpose Diferential Interface)
-seen on other boards, and surely different from HDMI.</p>
+<p><a href="https://github.com/machdyne/ddmi">DDMI</a> is different from, for example, GPDI (General-Purpose Differential Interface)
+seen on <a href="https://github.com/emard/ulx3s">other boards</a>, and surely different from HDMI.</p>
 <p>DDMI only has the R, G, B, and clock diffpairs connected, other pins (CEC, the
 I2C clock and data, Hot Plug Detect, and the Utility pin used for Ethernet and
-ARC) are left to float.</p>
-<p>(I think GPDI connects all of those to your chip instead)</p>
+ARC) are <a href="https://github.com/machdyne/lakritz/blob/main/pcb/lakritz_v0.pdf">left to float</a>.
+(I think GPDI <a href="https://github.com/emard/ulx3s/blob/master/doc/schematics_v316.pdf">connects all of those to your chip</a> instead)</p>
 <p>But all that is superficial as we can still send DVI signals using the DDMI
 interface, and they should be read properly even by &ldquo;HDMI-capable&rdquo;
-displays (or you can use an HDMI to DVI adapter / cable).</p>
-<p>HDMI is somewhat based / closely related to DVI.</p>
-<p>The DVI specification is legally available online. The Digital Display Working
+displays (or you can use an HDMI to DVI adapter / cable).
+HDMI is somewhat based / closely related to DVI.</p>
+<p>The <a href="https://web.archive.org/web/20070226204801if_/http://www.ddwg.org:80/lib/dvi_10.pdf">DVI specification</a>
+is legally available online. The Digital Display Working
 Group website is down, but the Internet Archive remembers.</p>
 <p>The signal has to be DVI-D to be compatible with HDMI devices (and connectors);
 that&rsquo;s because DVI-D is the only digital-only flavor, other variants &mdash; DVI-A
@@ -71,10 +75,11 @@ point in time one pixel is transmitted with its R, G, and B values encoded as
 10-bit integers. Pixels are being transmitted from left to right, from top to
 bottom. DVI was made that way to keep compatibility with CRT displays.</p>
 <h3 id="electrical-details-for-my-board">Electrical details for my board<a class="headerlink" href="#electrical-details-for-my-board" title="Permanent link">#</a></h3>
-<p>First things first, voltage.
-The HDMI connector must have 5 volts on the +5V pin.
-But the data pins are only supposed to transmit between <code>AV_cc</code> = +3.3V
-and <code>AV_cc - V_swing</code>, where <code>V_swing</code> is specified to be around 0.5V?</p>
+<p>First things first, voltage.</p>
+<p>The HDMI connector must have 5 volts on the +5V pin.</p>
+<p>But the data pins, by the DVI specification, are only supposed to transmit
+between <code>AV_cc</code> = +3.3V and <code>AV_cc - V_swing</code>, where <code>V_swing</code> is specified
+to be around 0.5V.</p>
 <p>My .lpf file specifies the &ldquo;P&rdquo; pins only, leaving out the &ldquo;N&rdquo; pins.
 This does not mean that the &ldquo;N&rdquo; pins aren&rsquo;t driven. I use <code>IO_TYPE=LVCMOS33D</code>,
 which means that the &ldquo;N&rdquo; pins are driven by Lattice auto-magic
@@ -117,34 +122,35 @@ still use the same concept of display modes from the CRT times,
 with front porches, back porches, vsync and hsync intervals.</p>
 <p>A lot of different display modes exist, and a lot of standards
 attempt(ed) to specify or document them; one can refer to, for
-example, the following open documents from VESA:</p>
+example, the following <a href="https://vesa.org/vesa-standards/">open documents from VESA</a>:</p>
 <ul>
-<li>VESA DMT 1.13 (VESA and Industry Standards and Guidelines for
+<li>VESA DMT 1.0 rev. 13 (VESA and Industry Standards and Guidelines for
   Computer Display Monitor Timing), which is an old document
   trying to list and document some modes.</li>
 <li>VESA GTF 1.1 (Generalized Timing Formula Standard), attempting
   to give a formula for calculating parameters for display modes</li>
 <li>VESA CVT 1.2 (VESA Coordinated Video Timings Standard),
-  based on VESA GTF, but bringing more realism:</li>
+  based on VESA GTF, but bringing more realism to the choice of clock frequencies.
+  It also allows for reducing the blanking period to not waste so
+  much bandwidth when the display is not a CRT anymore but an LCD.</li>
 </ul>
-<p>&ldquo;The GTF method works well on paper since it relies on
-  being able to create a pixel frequency of infinite resolution.
-  This, however, is not practical for real world applications where
-  clock generators have a finite resolution&rdquo;.</p>
-<p>It also allows for reducing the blanking period to not waste so
-  much bandwidth when the display is not a CRT anymore but an LCD.</p>
 <p>Also worthy of note:</p>
 <ul>
-<li>CEA-861 (&ldquo;A DTV Profile for Uncompressed High Speed
-  Digital Interfaces&rdquo;). Available online on the Internet Archive.
-  Also known as CTA-861, also known as ANSI/CTA-861.
-  It specifies a lot of extensions to VESA standards. It is also a
-  standard that all HDMI-compliant devices must adhere to (that is
-  mentioned in the HDMI spec, version 1.3a of which is available
-  for public download, not the latest version, alas).</li>
+<li>
+<p>CEA-861-G (&ldquo;A DTV Profile for Uncompressed High Speed
+  Digital Interfaces&rdquo;). Available online <a href="https://archive.org/details/CTA-861-G">on the Internet Archive</a>.</p>
+<p>Also known as CTA-861, also known as ANSI/CTA-861, also known as EIA/CEA-861.
+It specifies a lot of extensions to VESA standards.</p>
+<p>It is also a standard that all HDMI-compliant devices must adhere to (that
+is mentioned in the HDMI spec, version 1.3a of which is <a href="https://www.hdmi.org/requestform/clickrequestasync?docId=16">available
+for public download</a>,
+not the latest version, alas).</p>
+</li>
 </ul>
+<p>For convenience, a lot of the display-related documents are archived
+by some person named Glenwing <a href="https://glenwing.github.io/docs/">on their Github Pages instance</a>.</p>
 <h3 id="640x480-60-hz-non-interlaced">640x480 @ 60 Hz (non-interlaced)<a class="headerlink" href="#640x480-60-hz-non-interlaced" title="Permanent link">#</a></h3>
-<p>My module implements only one graphics mode.
+<p>My module implements only one display mode.
 The mode is called &ldquo;640 x 480 at 60 Hz (non-interlaced)&rdquo;
 (also known as VGA (not the connector)).</p>
 <p>Even the CEA-861 mandates that every &ldquo;video sink&rdquo; that accepts 60Hz video
@@ -152,7 +158,7 @@ must accept 640x480p @ 59.94/60Hz.</p>
 <p>(And honestly, looking at the timing analysis, I am not sure this logic could fit
 in a faster clock rate needed for higher resolutions&hellip;)</p>
 <p>The parameters for this mode can be retreived from
-VESA DMT revision 13 page 21:</p>
+VESA DMT 1.0 rev. 13 page 21:</p>
 <pre><code>Hor Pixels = 640; // Pixels
 Ver Pixels = 480; // Lines
 Pixel Clock = 25.175; // MHz = 39.7 nsec +/- 0.5%
@@ -226,7 +232,7 @@ one of the four special 10-bit numbers that are outside
 of the normal &ldquo;what you can get by encoding any pixel&rdquo;
 number range (and are also high in transition density;
 &ldquo;The high-transition content of the characters transmitted during
-the blanking period form the basis for character boundary
+the blanking period forms the basis for character boundary
 synchronization at the decoder&rdquo;).</p>
 <p>Every TMDS encoder takes in eight bits of the pixel,
 one DE &mdash; &ldquo;data enable&rdquo; bit, and control bits C0 and C1.
@@ -292,7 +298,7 @@ it is too slow to calculate <em>and</em> use in the same clock cycle.</p>
 <p>But when actually should we send the blanking symbols?</p>
 <p>The C0 and C1 signals are only taken into account when DE is 0.
 DE is set to 0 when we are in &ldquo;blanking&rdquo;.
-What is &ldquo;blanking&rdquo;? Surely, per VESA DMT revision 13 page 14,
+What is &ldquo;blanking&rdquo;? Surely, per VESA DMT 1.0 rev. 13 page 14,
 blanking means the front porch, the sync, and the back porch intervals?</p>
 <p>Enter CEA-861! The important part of CEA-861 here is:
 &ldquo;VESA defines blanking as not including the border
@@ -304,7 +310,7 @@ borders also, why not&hellip;</p>
 HSync is assigned to C0, and VSync is assigned to C1,
 but the DVI spec does not say when they are supposed to be set to 0
 and when they are supposed to be set to 1.</p>
-<p>VESA DMT revision 13 page 21 said that the Hor and Ver sync polarities
+<p>VESA DMT 1.0 rev. 13 page 21 said that the Hor and Ver sync polarities
 are &ldquo;negative&rdquo; for this mode. It means that HSync and VSync are:
 1 <em>outside</em> of the sync intervals and 0 <em>inside</em> the sync intervals.</p>
 <p>But honestly it does not seem like monitors care these days?
@@ -328,20 +334,18 @@ This implementation does the opposite and works fine!</p>
         // to the same + Ver Sync time = 492
         vsync &lt;= (490 &lt;= ver_pos) &amp;&amp; (ver_pos &lt; 492);
     end
-
 endmodule
-
-module tmds_encoder (
+</code></pre>
+<p>For the TMDS encoder, please follow to the DVI specification, specifically the diagram &ldquo;T.M.D.S. Encode Algorithm&rdquo;. For document version 1.0 it is on page 29.</p>
+<p>All comments in the following module refer to this diagram.</p>
+<p>&ldquo;Diamond&rdquo; refers to the rhombus used to denote conditions in the diagram.</p>
+<pre><code>module tmds_encoder (
     input clk_pixel,
     input [7:0] data,  // video data (red, green or blue)
     input [1:0] c,  // control data
     input de,  // video data enable, to choose between CD (when VDE=0) and VD (when VDE=1)
     output reg [9:0] encoded
     );
-
-    // Refer to the DVI specification!
-    // For version 1.0 this is page 29.
-    // The following comments refer to the diagram in the spec.
 
     // The &quot;data stream disparity&quot; register
     reg signed [5:0] cnt_t_1 = 0;
@@ -385,47 +389,32 @@ module tmds_encoder (
         if(de == 1'b0) begin
             cnt_t_1 &lt;= 0;
             case(c)
-            2'b00 : begin
-                encoded &lt;= 10'b1101010100;
-            end
-            2'b01 : begin
-                encoded &lt;= 10'b0010101011;
-            end
-            2'b10 : begin
-                encoded &lt;= 10'b0101010100;
-            end
-            default : begin
-                encoded &lt;= 10'b1010101011;
-            end
+            2'b00:   encoded &lt;= 10'b1101010100;
+            2'b01:   encoded &lt;= 10'b0010101011;
+            2'b10:   encoded &lt;= 10'b0101010100;
+            default: encoded &lt;= 10'b1010101011;
             endcase
 
         end else begin
             // This bit is always set like this for all four branches
             encoded[8] &lt;= q_m[8];
 
-            // Split the right branch into two because
-            // it is marginally faster
-            if (cnt_t_1 == 0) begin
+            // The right branch
+            // n_1_q_m == n_0_q_m can be reinterpreted as n_1_q_m == 4
+            if (cnt_t_1 == 0 || n_1_q_m == 4) begin
                 encoded[9] &lt;= ~q_m[8];
                 // encoded[0:7] = (q_m[8] ? q_m[0:7] : ~q_m[0:7])
                 // can be reinterpreted as q_m[0:7] XOR 1 if q_m[8] == 0
                 encoded[7:0] &lt;= q_m[7:0] ^ {8{q_m[8] ^ 1'b1}};
+
                 // Only cnt_t differs in the bottom right diamond
                 // I transformed &quot;N_1 - N_0&quot; because I only have N_0
                 // and N_0 = 8 - N_1 for an 8-bit number
                 if (q_m[8] == 0) begin
-                    cnt_t_1 &lt;= 8 - 2 * n_1_q_m;
+                    cnt_t_1 &lt;= cnt_t_1 + 8 - 2 * n_1_q_m;
                 end else begin
-                    cnt_t_1 &lt;= 2 * n_1_q_m - 8;
+                    cnt_t_1 &lt;= cnt_t_1 + 2 * n_1_q_m - 8;
                 end
-            // Continuation of the right branch still
-            // n_1_q_m == n_0_q_m can be reinterpreted as n_1_q_m == 4
-            end else if (n_1_q_m == 4) begin
-                encoded[9] &lt;= ~q_m[8];
-                // encoded[0:7] = (q_m[8] ? q_m[0:7] : ~q_m[0:7])
-                // can be reinterpreted as q_m[0:7] XOR 1 if q_m[8] == 0
-                encoded[7:0] &lt;= q_m[7:0] ^ {8{q_m[8] ^ 1'b1}};
-                // cnt_t_1 is unchanged because N_1 == N_0
 
             // Bottom left branch
             end else begin
@@ -449,5 +438,7 @@ module tmds_encoder (
     end
 endmodule
 </code></pre>
+<p>Result:</p>
+<p><img src="ddmi-output.jpg" class="illustration" /></p>
 </body>
 </html>
