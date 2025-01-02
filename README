@@ -1,1 +1,3 @@
 Just run `python render.py`, it will scan the .md files in the folder and generate all the .html-s, including index.html
+
+This content is licensed under CC-BY 4.0, except for any code and code snippets, which are licensed under 0BSD.

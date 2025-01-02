@@ -49,6 +49,8 @@ img.illustration {
 """
 
 html_footer = """
+<hr />
+<p><small>This content is licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY 4.0</a>, except for any code and code snippets, which are licensed under <a href="https://spdx.org/licenses/0BSD.html">0BSD</a>.</small></p>
 </body>
 </html>
 """
