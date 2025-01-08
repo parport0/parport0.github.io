@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Reddit+Mono&display=swap');
+body {
+  font-family: "Noto Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
+}
+code {
+  font-family: "Reddit Mono", monospace;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  color: hsl(220deg 73% 24%);
+  overflow-wrap: break-word;
+}
+pre {
+  overflow-x: scroll;
+  background-color: #ececf8;
+}
+a:link, a:visited {
+  color: hsl(220deg 60% 40%);
+}
+a.headerlink {
+  text-decoration: none;
+  margin-left: 0.5em;
+  color: hsl(360deg, 0%, 77%)
+}
+a.headerlink:hover {
+  text-decoration: underline;
+  color: hsl(360deg, 0%, 43%)
+}
+img.illustration {
+  max-width:600px;
+  width:100%;
+}
+</style>
+</head>
+<body>
+<p><a href="/">(index)</a></p>
+<h1 id="2025-01-08-linux-on-macbook-pro-142">2025-01-08. Linux on Macbook Pro 14,2<a class="headerlink" href="#2025-01-08-linux-on-macbook-pro-142" title="Permanent link">#</a></h1><p>A quick look at <a href="https://github.com/Dunedan/mbp-2016-linux">https://github.com/Dunedan/mbp-2016-linux</a> makes one lose hope, but it is way better than it looks at first.</p>
+<p>This note is primarily for myself, if I have to reinstall Linux on this machine again. Low effort alert.</p>
+<p>If you want to share some information with me, for example if something is wrong here, please email me.</p>
+<p>I tried to install Debian using its installer, it froze&hellip; I had to install Ubuntu.</p>
+<h3 id="t1-firmware">T1 firmware<a class="headerlink" href="#t1-firmware" title="Permanent link">#</a></h3>
+<p>Do not uninstall Mac OS without backing up the EFI partition contents, or the T1/iBridge device will not be able to boot! The EFI partition has the chip&rsquo;s firmware.</p>
+<p>You will be getting</p>
+<pre><code>Bus 001 Device 003: ID 05ac:1281 Apple, Inc. Apple Mobile Device [Recovery Mode]
+</code></pre>
+<p>instead of</p>
+<pre><code>Bus 001 Device 002: ID 05ac:8600 Apple, Inc. iBridge
+</code></pre>
+<p>(If you wiped Mac OS already, it&rsquo;s fine, you&rsquo;ll have to reinstall it, it is perfectly possible to reinstall)</p>
+<p>You need to back up the <code>EFI/APPLE/</code> folder from the first partition on the NVMe. After you installed Linux, put the folder in the same place.</p>
+<p><a href="https://github.com/Dunedan/mbp-2016-linux/issues/52#issuecomment-364920804">Source</a>.</p>
+<h3 id="wi-fi">Wi-Fi<a class="headerlink" href="#wi-fi" title="Permanent link">#</a></h3>
+<p>From the <a href="https://bugzilla.kernel.org/show_bug.cgi?id=193121">kernel bug 193121</a>, download the attachment of <em>comment 74</em>,</p>
+<p>change <code>boardflags3=0xC0000303</code> to <code>boardflags3=0x00000303</code>,</p>
+<p>and save the file as <code>/lib/firmware/brcm/brcmfmac43602-pcie.txt</code>.</p>
+<p>(I have it saved <a href="brcmfmac43602-pcie.txt">here</a> also, already with the modification, just in case)</p>
+<p>Then run <code>rmmod brcmfmac_wcc &amp;&amp; rmmod brcmfmac &amp;&amp; modprobe brcmfmac &amp;&amp; modprobe brcmfmac_wcc</code>.</p>
+<h3 id="touchpad-scroll-in-firefox-is-too-fast">Touchpad scroll in Firefox is too fast<a class="headerlink" href="#touchpad-scroll-in-firefox-is-too-fast" title="Permanent link">#</a></h3>
+<p>It is a Firefox issue; in <code>about:config</code>, change <code>mousewheel.default.delta_multiplier_y</code> and <code>mousewheel.default.delta_multiplier_x</code> from 100 to 25-ish</p>
+<p><a href="https://discussion.fedoraproject.org/t/palm-rejection-scroll-speed/118505/3">Firefox specificness source</a>.</p>
+<p><a href="https://askubuntu.com/questions/1447009/control-scrolling-speed-in-webpages-in-firefox">Workaround source</a>.</p>
+<h3 id="palm-rejection">Palm rejection<a class="headerlink" href="#palm-rejection" title="Permanent link">#</a></h3>
+<p>Add to <code>/usr/share/libinput/50-system-apple.quirks</code>:</p>
+<pre><code>[Apple SPI Touchpad]
+MatchName=*Apple SPI Touchpad*
+ModelAppleTouchpad=1
+AttrTouchSizeRange=50:30
+AttrPalmSizeThreshold=1100
+
+[Apple SPI Keyboard]
+MatchName=*Apple SPI Keyboard*
+AttrKeyboardIntegration=internal
+</code></pre>
+<p>and relogin.</p>
+<p><a href="https://gist.github.com/peterychuang/5cf9bf527bc26adef47d714c758a5509">Source</a></p>
+<p>(I changed <code>AttrPalmSizeThreshold</code> from the suggested 800 to 1100 because I had weird behaviors when e.g. dragging windows or selecting text, which turned out to be palm detection kicking in too soon; it can be debugged with <a href="https://wayland.freedesktop.org/libinput/doc/latest/touchpad-pressure-debugging.html#touchpad-touch-size-hwdb">libinput measure touch-size</a>)</p>
+<h3 id="escape">Escape<a class="headerlink" href="#escape" title="Permanent link">#</a></h3>
+<p><a href="https://lore.kernel.org/lkml/20190612083400.1015-1-ronald@innovation.ch/">I found this on the mailing lists</a>.</p>
+<p>It would benefit from someone addressing the round 2 review comments and resending these; I doubt I will have the time for it anytime soon. And first, the following unbind/probe issue needs to be resolved (unless it is my fault).</p>
+<p><a href="https://github.com/parport0/mbp-t1-touchbar-driver">I fixed this driver up a bit for 6.8.0 here</a>.</p>
+<p>The unbind/probe issue is basically that I have to run these commands on boot:</p>
+<pre><code>sudo modprobe apple-ib-tb
+sudo bash -c 'echo -n &quot;1-3&quot; &gt; /sys/bus/usb/drivers/usb/unbind'
+sudo bash -c 'echo -n 1-3 &gt; /sys/bus/usb/drivers_probe'
+</code></pre>
+<p>I created a systemd oneshot service to run them <code>After=multi-user.target</code> and <code>WantedBy=graphical.target</code>.</p>
+<p>Why are those unbind + probe needed? I needed them because otherwise the apple-ibridge driver is not expanding the <code>/sys/bus/usb/devices/1-3</code> device.</p>
+<p>Maybe it is because the generic <code>usb</code> driver steals the device? There was a <a href="https://patchwork.kernel.org/project/linux-usb/patch/20200727104644.149873-3-hadess@hadess.net/">patch to implement some &ldquo;anti-stealing&rdquo; functionality for the &ldquo;generic&rdquo; usb drivers</a>, but I am not knowledgeable enough to say for sure why it does not work in this case. My suspicion is that the <code>apple-ibridge</code> driver needs to have a <code>usb_driver</code> entry as well? It only has a HID driver, which also kinda manages the <code>usb_device</code>.</p>
+<p>But to be honest, even when I run the reprobe, and I get the touchbar to work, <code>/sys/bus/usb/devices/1-3/driver</code> still points to <code>bus/usb/drivers/usb</code>, so I don&rsquo;t understand at all what is going on there.</p>
+<p>This driver is strange because it creates four virtual HID devices. If <code>lsusb -t</code> does not show four interfaces appearing on <code>05ac:8600</code>, then apple-ibridge.ko didn&rsquo;t do its job right.</p>
+<p>If the devices are there, but the touchbar still doesn&rsquo;t light up, try to restart the laptop&hellip;</p>
+<p>Why I didn&rsquo;t use the <a href="https://github.com/roadrunner2/macbook12-spi-driver">roadrunner2 macbook12-spi-driver</a> code? Because I looked at it quickly, and it was bundled with the MacbookPro SPI Keyboard/Touchpad driver, forked from a driver that has nothing in common at all with the Touchbar functionality. I only saw later that the Touchbar-related parts are basically the same as what I pulled from the mailing list (they are the same person!). Still, what I used works well and does not pull an unneeded driver.</p>
+<p>Moreover, the roadrunner2 repo <a href="https://github.com/roadrunner2/macbook12-spi-driver/issues/72">is not being maintained</a>.</p>
+<p>Some people are <a href="https://www.phoronix.com/news/Apple-Touch-Bar-Linux-2024">trying to merge in a touchbar driver for T2 Macs</a>, but I am not sure if it is supposed to support T1 Macs as well or not at all (I saw no indication of T1 Macs being considered there).</p>
+<h3 id="audio">Audio<a class="headerlink" href="#audio" title="Permanent link">#</a></h3>
+<p>The <a href="https://github.com/davidjo/snd_hda_macbookpro">snd_hda_macbookpro</a> driver <a href="https://github.com/davidjo/snd_hda_macbookpro/issues/5">actually supports Macbook Pro 14,2</a>, contrary to what is mentioned in <a href="https://github.com/Dunedan/mbp-2016-linux">https://github.com/Dunedan/mbp-2016-linux</a>.</p>
+<p>It just works if you run the scary script.</p>
+<h3 id="return-from-suspend">Return from suspend<a class="headerlink" href="#return-from-suspend" title="Permanent link">#</a></h3>
+<p>This does <em>not</em> work for me:</p>
+<pre><code>echo 0 &gt; /sys/bus/pci/devices/0000\:01\:00.0/d3cold_allowed
+</code></pre>
+<p>(<a href="https://github.com/Dunedan/mbp-2016-linux?tab=readme-ov-file#suspend--hibernation">source</a>)</p>
+<p>It probably fixes the NVMe issue, but something else is also broken for me. Maybe some of the weird kernel modules I added is the culprit.</p>
+<p>Neither <code>deep</code> nor even <code>s2idle</code> sleep modess let me wake the laptop up.</p>
+<p>I don&rsquo;t care much about suspend at the moment, but maybe I will fix it in the future. I disable suspend in <code>/etc/systemd/sleep.conf</code>:</p>
+<pre><code>[Sleep]
+AllowSuspend=no
+AllowHibernation=no
+AllowHybridSleep=no
+AllowSuspendThenHibernate=no
+</code></pre>
+<hr />
+<p><small>This content is licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY 4.0</a>, except for any code and code snippets, which are licensed under <a href="https://spdx.org/licenses/0BSD.html">0BSD</a>.</small></p>
+</body>
+</html>
