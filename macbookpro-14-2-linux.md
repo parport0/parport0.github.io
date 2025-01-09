@@ -5,7 +5,7 @@ A quick look at <https://github.com/Dunedan/mbp-2016-linux> makes one lose hope,
 
 This note is primarily for myself, if I have to reinstall Linux on this machine again. Low effort alert.
 
-If you want to share some information with me, for example if something is wrong here, please email me.
+If you want to share some information with me, for example if something is wrong here, please [email me](https://github.com/parport0/).
 
 I tried to install Debian using its installer, it froze... I had to install Ubuntu.
 

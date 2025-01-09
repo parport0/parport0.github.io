@@ -7,7 +7,7 @@ so I "inverted" it and turned it into an .md file with less-than-half of it bein
 Articles exist on the Internet about this topic, but I wished they explained more
 of the "why", not only the "how".
 
-I am not proficient at neither Verilog nor video standards. Please email me if something is wrong and irks you.
+I am not proficient at neither Verilog nor video standards. Please [email me](https://github.com/parport0/) if something is wrong and irks you.
 
 ### DDMI stands for "Differential Data Multiple Interface".
 
