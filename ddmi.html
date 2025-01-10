@@ -107,7 +107,7 @@ and why the schematic has no capacitors breaking up the TMDS lines
 (something I&rsquo;ve seen being suggested on the forums, and, for example,
 implemented on the &ldquo;ULX3S&rdquo; board), there are only 270 Ohm resistor arrays there.</p>
 <p>but it works,</p>
-<p>and it is what Lone Dynamics also specified <a href="https://github.com/litex-hub/litex-boards/commit/34e85c5cf699f0ee67fe8de4f64ff01f15ce244f#diff-58c38e81366e0b19aaefd17832b4088de53dac28ba1f8957036ceae923ca7a8eR37">when they added Lakritz support to LiteX</a>.</p>
+<p>and it is what Lone Dynamics also specified <a href="https://github.com/litex-hub/litex-boards/commit/34e85c5cf699f0ee67fe8de4f64ff01f15ce244f#diff-58c38e81366e0b19aaefd17832b4088de53dac28ba1f8957036ceae923ca7a8eR42">when they added Lakritz support to LiteX</a>.</p>
 <p>This module takes two clocks in, because fitting all the logic into the clk_tmds clock was not possible for my board.
 For me, they come from the same PLL.</p>
 <pre><code>module ddmi (

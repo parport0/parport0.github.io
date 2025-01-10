@@ -83,7 +83,7 @@ implemented on the "ULX3S" board), there are only 270 Ohm resistor arrays there.
 
 but it works,
 
-and it is what Lone Dynamics also specified [when they added Lakritz support to LiteX](https://github.com/litex-hub/litex-boards/commit/34e85c5cf699f0ee67fe8de4f64ff01f15ce244f#diff-58c38e81366e0b19aaefd17832b4088de53dac28ba1f8957036ceae923ca7a8eR37).
+and it is what Lone Dynamics also specified [when they added Lakritz support to LiteX](https://github.com/litex-hub/litex-boards/commit/34e85c5cf699f0ee67fe8de4f64ff01f15ce244f#diff-58c38e81366e0b19aaefd17832b4088de53dac28ba1f8957036ceae923ca7a8eR42).
 
 This module takes two clocks in, because fitting all the logic into the clk_tmds clock was not possible for my board.
 For me, they come from the same PLL.
