@@ -47,6 +47,10 @@ img.illustration {
   max-width:600px;
   width:100%;
 }
+video.illustration {
+  max-width:600px;
+  width:100%;
+}
 </style>
 </head>
 <body>
