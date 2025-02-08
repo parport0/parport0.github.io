@@ -53,7 +53,7 @@ video.illustration {
 <body>
 <p><a href="/">(index)</a></p>
 <h1 id="2025-01-26-running-doom-on-a-hiby-r2-player">2025-01-26. Running Doom on a HiBy R2 player<a class="headerlink" href="#2025-01-26-running-doom-on-a-hiby-r2-player" title="Permanent link">#</a></h1><p>Now that I have a <a href="/hiby-r2-teardown.html">disassembled player with no battery</a>, the only thing left to do is to run Doom on it.</p>
-<p>At this point the device powers on without a battery soldered on when the USB cable is connected with a USB-A connector on the other end (not with USB-C-to-USB-C cables; I first incorrectly assumed the device won&rsquo;t turn on without a battery at all, but after all it is likely the player just lacks the 5.1k Ohm resistors on the CC pins).</p>
+<p>At this point the device powers on without a battery soldered on when the USB cable is connected with a USB-A connector on the other end (so <em>not</em> when using USB-C-to-USB-C cables; I first incorrectly assumed the device won&rsquo;t turn on without a battery at all, but it is likely the player just lacks the 5.1k Ohm resistors on the CC pins).</p>
 <p><img src="hiby-r2-doom-demo.gif" class="illustration" /></p>
 <h3 id="boot-modes">Boot modes<a class="headerlink" href="#boot-modes" title="Permanent link">#</a></h3>
 <p>What if we held some buttons on the device as it is being powered on?</p>
@@ -65,13 +65,13 @@ video.illustration {
 <p>Vol Dn: Black screen with &ldquo;Insert TF Pls&rdquo; written, no USB device.</p>
 </li>
 <li>
-<p>Previous Track: Black screen, Ingenic USB device. Looking this VID:PID told me that this is a so-called &ldquo;USB-Boot&rdquo; mode and it usable with for example an &ldquo;Ingenic Cloner&rdquo; program. I have no configuration for the cloner tool, so I left it alone.</p>
+<p>Previous Track: Black screen, Ingenic USB device. Looking this VID:PID up told me that this is a so-called &ldquo;USB-Boot&rdquo; mode and it usable with for example an &ldquo;Ingenic Cloner&rdquo; program. I have no configuration for the cloner tool, so I left it alone.</p>
 <p><code>Bus 001 Device 003: ID a108:1000 Ingenic Semiconductor Co.,Ltd X1000</code></p>
 </li>
 </ul>
 <h3 id="hiby-update-files">HiBy update files<a class="headerlink" href="#hiby-update-files" title="Permanent link">#</a></h3>
 <p>The vendor&rsquo;s firmware and the instructions are available on the <a href="https://store.hiby.com/apps/help-center#hc-r2-firmware-v14-update">official support page</a>. The firmware download link leads to <a href="https://drive.google.com/drive/folders/1zL_sQsT-umxnWIJK5OLQjJChycokfS9R?usp=share_link">Google Drive</a>.</p>
-<p>The instructions say to put the downloaded r2.upt into the root of the SD card. Trying it out, it is flashable whel Vol Dn is held. Additionally, if the update process is interrupted midway, the device boots into the &ldquo;Insert TF Pls&rdquo; mode automatically.</p>
+<p>The instructions say to put the downloaded r2.upt into the root of the SD card. Trying it out, it is flashable when Vol Dn is held. Additionally, if the update process is interrupted midway, the device boots into the &ldquo;Insert TF Pls&rdquo; mode automatically.</p>
 <pre><code>% file r2.upt
 r2.upt: ISO 9660 CD-ROM filesystem data 'CDROM'
 % isoinfo -i r2.upt -d
@@ -146,7 +146,7 @@ system.ubi: UBIfs image, sequence number 28612, length 4096, CRC 0x7125f312
 <p>I fought for some time against the following in my <code>dmesg</code>:</p>
 <pre><code>Hamming ECC initialization failed!
 </code></pre>
-<p>Apparently, having Hamming ECC calculation support was not enough, I also needed CONFIG_MTD_NAND_ECC_SW_HAMMING_SMC (&ldquo;Software ECC according to the Smart Media Specification&rdquo;?!).</p>
+<p>Apparently, having Hamming ECC calculation support was not enough, I also needed <code>CONFIG_MTD_NAND_ECC_SW_HAMMING_SMC</code> (&ldquo;Software ECC according to the Smart Media Specification&rdquo;?!).</p>
 <p>My final kernel config change:</p>
 <pre><code>CONFIG_MTD=m
 CONFIG_MTD_UBI=m

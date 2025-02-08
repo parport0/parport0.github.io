@@ -53,7 +53,7 @@ video.illustration {
 <body>
 <p><a href="/">(index)</a></p>
 <h1 id="2025-01-10-implementing-a-very-simple-winbond-w9825g6kh-sdram-controller-on-a-lakritz-ecp5-fpga-board">2025-01-10. Implementing a very simple Winbond W9825G6KH SDRAM controller on a Lakritz ECP5 FPGA board<a class="headerlink" href="#2025-01-10-implementing-a-very-simple-winbond-w9825g6kh-sdram-controller-on-a-lakritz-ecp5-fpga-board" title="Permanent link">#</a></h1><p>This note is half-code, half-comments around this code, same as the <a href="/ddmi.html">DDMI note</a>.</p>
-<p>This is the simpliest, slowest possible but yet functional
+<p>This is the simplest, slowest possible but yet functional
 implementation of an SDR SDRAM controller, based completely
 off of the chip&rsquo;s datasheet.</p>
 <p>Note that the code is 0BSD licensed, meaning anyone is free to do whatever
@@ -567,7 +567,7 @@ It is 15 nS, so 1 clock cycle <em>for me</em>, means I don&rsquo;t need to keep 
 <p>The minimum time between successive Bank Activate commands:
     to the <em>same</em> bank it is <code>t_RC</code> (60 nS, 3 clock cycles for me),
     between different banks it is <code>t_RRD</code> (2 clock cycles).</p>
-<p>I am implementing the controller a very alow and a very simple way,
+<p>I am implementing the controller in a very slow and a very simple way,
 so I am already spending more than 3 clock cycles between successive
 bank activations at least because I spend some time jumping between
 the states in my state machine.
@@ -664,7 +664,7 @@ a read operation, flush the FIFOs, and then go back to the Idle state.</p>
             // Wait for t_RC - t_RCD or for the CAS latency.
             // In our case the CAS latency is longer because of
             // how slow the clock is.
-            // Writing could be done faster, but it is simplier
+            // Writing could be done faster, but it is simpler
             // to have one state handle reading and writing.
             if (pause_counter == 3) begin
                 state &lt;= 4;

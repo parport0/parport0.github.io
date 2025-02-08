@@ -3,7 +3,7 @@ Date: 2025-01-10
 
 This note is half-code, half-comments around this code, same as the [DDMI note](/ddmi.html).
 
-This is the simpliest, slowest possible but yet functional
+This is the simplest, slowest possible but yet functional
 implementation of an SDR SDRAM controller, based completely
 off of the chip's datasheet.
 
@@ -653,7 +653,7 @@ Some requirements from 7.3 "Bank Activate Command":
     to the *same* bank it is `t_RC` (60 nS, 3 clock cycles for me),
     between different banks it is `t_RRD` (2 clock cycles).
 
-    I am implementing the controller a very alow and a very simple way,
+    I am implementing the controller in a very slow and a very simple way,
     so I am already spending more than 3 clock cycles between successive
     bank activations at least because I spend some time jumping between
     the states in my state machine.
@@ -762,7 +762,7 @@ a read operation, flush the FIFOs, and then go back to the Idle state.
 			// Wait for t_RC - t_RCD or for the CAS latency.
 			// In our case the CAS latency is longer because of
 			// how slow the clock is.
-			// Writing could be done faster, but it is simplier
+			// Writing could be done faster, but it is simpler
 			// to have one state handle reading and writing.
 			if (pause_counter == 3) begin
 				state <= 4;

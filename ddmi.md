@@ -148,7 +148,7 @@ must accept 640x480p @ 59.94/60Hz.
 (And honestly, looking at the timing analysis, I am not sure this logic could fit
 in a faster clock rate needed for higher resolutions...)
 
-The parameters for this mode can be retreived from
+The parameters for this mode can be retrieved from
 VESA DMT 1.0 rev. 13 page 21:
 
 ```

@@ -3,7 +3,7 @@ Date: 2025-01-26
 
 Now that I have a [disassembled player with no battery](/hiby-r2-teardown.html), the only thing left to do is to run Doom on it.
 
-At this point the device powers on without a battery soldered on when the USB cable is connected with a USB-A connector on the other end (not with USB-C-to-USB-C cables; I first incorrectly assumed the device won't turn on without a battery at all, but after all it is likely the player just lacks the 5.1k Ohm resistors on the CC pins).
+At this point the device powers on without a battery soldered on when the USB cable is connected with a USB-A connector on the other end (so *not* when using USB-C-to-USB-C cables; I first incorrectly assumed the device won't turn on without a battery at all, but it is likely the player just lacks the 5.1k Ohm resistors on the CC pins).
 
 <img src="hiby-r2-doom-demo.gif" class="illustration" />
 
@@ -15,7 +15,7 @@ What if we held some buttons on the device as it is being powered on?
 
 * Vol Dn: Black screen with "Insert TF Pls" written, no USB device.
 
-* Previous Track: Black screen, Ingenic USB device. Looking this VID:PID told me that this is a so-called "USB-Boot" mode and it usable with for example an "Ingenic Cloner" program. I have no configuration for the cloner tool, so I left it alone.
+* Previous Track: Black screen, Ingenic USB device. Looking this VID:PID up told me that this is a so-called "USB-Boot" mode and it usable with for example an "Ingenic Cloner" program. I have no configuration for the cloner tool, so I left it alone.
 
     ```
     Bus 001 Device 003: ID a108:1000 Ingenic Semiconductor Co.,Ltd X1000
@@ -25,7 +25,7 @@ What if we held some buttons on the device as it is being powered on?
 
 The vendor's firmware and the instructions are available on the [official support page](https://store.hiby.com/apps/help-center#hc-r2-firmware-v14-update). The firmware download link leads to [Google Drive](https://drive.google.com/drive/folders/1zL_sQsT-umxnWIJK5OLQjJChycokfS9R?usp=share_link).
 
-The instructions say to put the downloaded r2.upt into the root of the SD card. Trying it out, it is flashable whel Vol Dn is held. Additionally, if the update process is interrupted midway, the device boots into the "Insert TF Pls" mode automatically.
+The instructions say to put the downloaded r2.upt into the root of the SD card. Trying it out, it is flashable when Vol Dn is held. Additionally, if the update process is interrupted midway, the device boots into the "Insert TF Pls" mode automatically.
 
 ```
 % file r2.upt
@@ -118,7 +118,7 @@ I fought for some time against the following in my `dmesg`:
 Hamming ECC initialization failed!
 ```
 
-Apparently, having Hamming ECC calculation support was not enough, I also needed CONFIG_MTD_NAND_ECC_SW_HAMMING_SMC ("Software ECC according to the Smart Media Specification"?!).
+Apparently, having Hamming ECC calculation support was not enough, I also needed `CONFIG_MTD_NAND_ECC_SW_HAMMING_SMC` ("Software ECC according to the Smart Media Specification"?!).
 
 My final kernel config change:
 
