@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link href="https://mastodon.social/@parport0" rel="me" />
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Reddit+Mono&display=swap');
+body {
+  font-family: "Noto Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
+}
+code {
+  font-family: "Reddit Mono", monospace;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  color: hsl(220deg 73% 24%);
+  overflow-wrap: break-word;
+}
+pre {
+  overflow-x: scroll;
+  background-color: #ececf8;
+}
+a:link, a:visited {
+  color: hsl(220deg 60% 40%);
+}
+a.headerlink {
+  text-decoration: none;
+  margin-left: 0.5em;
+  color: hsl(360deg, 0%, 77%)
+}
+a.headerlink:hover {
+  text-decoration: underline;
+  color: hsl(360deg, 0%, 43%)
+}
+img.illustration {
+  max-width:600px;
+  width:100%;
+}
+video.illustration {
+  max-width:600px;
+  width:100%;
+}
+</style>
+</head>
+<body>
+<p><a href="/">(index)</a></p>
+<h1 id="2026-01-18-erlite-3-hardware-teardown">2026-01-18. ERLite-3 hardware teardown<a class="headerlink" href="#2026-01-18-erlite-3-hardware-teardown" title="Permanent link">#</a></h1><p>I received an Ubiquiti EdgeRouter Lite (ERLite-3). I decided to disassemble it.</p>
+<p>There are seemingly at least two variants of ERLite-3 enclosures, both contain visually the same PCB.</p>
+<p>I have the pleasure of owning a cuboid version of ERLite-3. This version does not have a heatsink plate on the back side.</p>
+<p>To disassemble an ERLite-3, you need to remove three black screws in the back of the router (PH0 head) and pull the lid forward, into the direction of the Ethernet ports. The &ldquo;GROUND&rdquo; screw does not need to be removed.</p>
+<p><img src="erlite-3-overview.jpg" class="illustration"></p>
+<p><img src="erlite-3-top.jpg" class="illustration"></p>
+<p><img src="erlite-3-bottom.jpg" class="illustration"></p>
+<p>Some of the components:</p>
+<ul>
+<li>SoC: Cavium CN5020-500BG564-SCP-G (Octeon, 2-core mips64r2/cnMIPS64)</li>
+<li>SPI-NOR: Winbond 25X05CLNIG (512 Kb)</li>
+<li>Parallel NOR: Macronix MX29LV320ETTI-70G</li>
+<li>USB stick: 13fe:4100 Phison Electronics Corp. Flash drive, USB DISK 2.0 (3.73 GiB, 4009754624 bytes, 7831552 sectors)</li>
+<li>RS-232: TI MA3221C</li>
+<li>10/100/1000 Mbps RGMII Ethernet PHY: 3x Atheros AR8035-A</li>
+</ul>
+<p>There is a <a href="https://dl.ui.com/firmwares/edgemax/v3.0.0-rc.9/GPL.octeon.v3.0.0-rc.9.5753459.tar.bz2">GPL package</a> available for this device. The URL itself mentions FW version v3.0.0-rc.9, although the latest FW available at the time of writing is <a href="https://dl.ui.com/firmwares/edgemax/3.0.1/ER-e100.v3.0.1.5862409.tar">v3.0.1</a>.</p>
+<p>There is also a document floating called <a href="https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/hactive/CN50XX-HRM-V0.99E.pdf">CN50XX-HRM-V0.99E.pdf</a> that could be of interest.</p>
+<p>There is a JTAG/EJTAG header, but two pins (would be TDO and nRST, probably?) are disconnected because of missing R76 and R92 resistors. There are also some, presumably, diodes, missing in the vicinity, D34 and D35.</p>
+<p>There are five test points near the Cavium that I did not identify.</p>
+<hr />
+<p><small>Except where otherwise noted, this content is licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY 4.0</a>; except for any code and code snippets, which are, except where otherwise noted, licensed under <a href="https://spdx.org/licenses/0BSD.html">0BSD</a>.</small></p>
+</body>
+</html>
