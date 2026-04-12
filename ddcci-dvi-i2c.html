@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link href="https://mastodon.social/@parport0" rel="me" />
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Reddit+Mono&display=swap');
+body {
+  font-family: "Noto Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
+}
+code {
+  font-family: "Reddit Mono", monospace;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  color: hsl(220deg 73% 24%);
+  overflow-wrap: break-word;
+}
+pre {
+  overflow-x: scroll;
+  background-color: #ececf8;
+}
+a:link, a:visited {
+  color: hsl(220deg 60% 40%);
+}
+a.headerlink {
+  text-decoration: none;
+  margin-left: 0.5em;
+  color: hsl(360deg, 0%, 77%)
+}
+a.headerlink:hover {
+  text-decoration: underline;
+  color: hsl(360deg, 0%, 43%)
+}
+img.illustration {
+  max-width:600px;
+  width:100%;
+}
+video.illustration {
+  max-width:600px;
+  width:100%;
+}
+</style>
+</head>
+<body>
+<p><a href="/">(index)</a></p>
+<h1 id="2026-04-11-draft-using-ddcci-to-change-monitors-inputs-and-brightness-with-a-physical-knob">2026-04-11. (Draft) Using DDC/CI to change monitors inputs and brightness with a physical knob<a class="headerlink" href="#2026-04-11-draft-using-ddcci-to-change-monitors-inputs-and-brightness-with-a-physical-knob" title="Permanent link">#</a></h1><p>There were two triggers for this, both coming from my husband.</p>
+<ol>
+<li>He got a new monitor with a built-in KVM, allowing him to drop the separate KVM boxes he was using. As it often is with monitors, the control is on the back, making you awkwardly probe the other side blind; it also makes you go through some monitor menus.</li>
+<li>The available software solutions for this are unsatisfactory.<ol>
+<li>For Windows, he was using Monitorian to control his monitor brightness for some time; I tried to use it several times as well. It was not stable enough for him; and I don&rsquo;t appreciate the focus on subscription-only features. This software also does not support changing the current input source.</li>
+<li>For Mac OS, he was using MonitorControl, and again, this software does not support changing the current input source, and again, the author of the project is heavily promoting his alternative, paid software.</li>
+</ol>
+</li>
+</ol>
+<p>DDC is a set of protocols that is used for communication between a computer and a monitor.</p>
+<p>The same protocols are used in VGA, DVI, DisplayPort, and HDMI. All these protocols are based on I2C: the computer is the controller, the monitor is the target. In the case of VGA, DVI, and HDMI, two pins on these connectors are just dedicated to 5 volts SDA and SCL. In the case of DisplayPort, things are a bit different: these I2C-based protocols are crammed into the AUX diffpair. The apparent complexity of the AUX channel is why I decided to test things out with HDMI first.</p>
+<p>About the different standards, to put it short:</p>
+<ul>
+<li>E-DDC says where the I2C pins go on different connectors. It also explains one half of how to get the EDID, and what I2C address the monitor has for this (0x50 == 0xA0/0xA1)</li>
+<li>E-EDID explains the other half of how to get the EDID, and what EDID actually contains (I was interested on getting the monitor&rsquo;s name; it is there in the EDID)</li>
+<li>DDC/CI explains the basic bytes to send for &ldquo;what controls do you have on this bus?&rdquo; and &ldquo;please set your 0x10 control to value of 0x64&rdquo;, including the I2C address of the monitor to use for this (0x37 == 0x6E/0x6F), and the checksums, lengths, and all that, of a data packet</li>
+<li>MCCS explains what the controls are, for example, that 0x10 is Luminance (<em>some</em> may call it <em>&ldquo;brightness&rdquo;</em>), or that &ldquo;input source&rdquo; is basically same as &ldquo;luminance&rdquo;, with pre-defined values for &ldquo;Analog video 1&rdquo;, &ldquo;S-video 1&rdquo;, &ldquo;Tuner 3&rdquo;, and even &ldquo;DisplayPort 1&rdquo; (no pre-defined value for &ldquo;USB-C&rdquo;, though)</li>
+</ul>
+<p>All of these are at the time of writing available for free download from <a href="https://vesa.org/vesa-standards/">the VESA standards website</a>.</p>
+<p>As I started reading about the above, and <a href="https://mitxela.com/projects/ddc-oled">other people&rsquo;s DDC/CI adventures</a>, I realized I wanted to probe the I2C line myself to get a feel for it.</p>
+<p>And I did not want to risk disrupting the actual video signal by tearing apart a cable; I wanted a PCB for that.</p>
+<h3 id="newbie-take-on-pcb-design">Newbie take on PCB design<a class="headerlink" href="#newbie-take-on-pcb-design" title="Permanent link">#</a></h3>
+<p>Hence came the <a href="https://github.com/parport0/dvi_i2c_checkpoint">DVI I2C checkpoint</a>, my first PCB with controlled impedance traces. The S-shaped layout idea, that avoids vias, I got somewhere from Reddit.</p>
+<p>I am a software engineer. I was never educated to make PCBs. In this section I, with the vanity of a software engineer, will give my take on how to make PCBs, because I did it twice and it seemed to work.</p>
+<p>If you are in the same bucket as me, then really, just watch some of Eric Bogatin&rsquo;s and Rick Hartley&rsquo;s talks on PCB design. After that, preferably <em>after</em> that, read some of TI&rsquo;s app notes on high speed layout.</p>
+<p>I use KiCad, and I ordered the board from JLCPCB because of the low cost.</p>
+<p>As I came to understand, knowing the capabilities of who will manufacture your board needs to come first. I installed a DRU from someone on Github; I am not linking the specific one, because it seems to be outdated, and there are several forks of the project available, and generally, just make sure your KiCad&rsquo;s &ldquo;Board Setup&rdquo; -&gt; &ldquo;Custom Rules&rdquo; is filled with some rules matching your board house capabilities (at the time of writing, the JLCPCB capabilities were available <a href="https://jlcpcb.com/capabilities/pcb-capabilities">here</a>).</p>
+<p>You should also set up the board stackup; again, on Github there are some autogenerated JLCPCB board stackups, or you can fill it out yourself. As I understand, this is mostly useful if you want to use KiCad&rsquo;s impedance calculator instead, but I also <em>hope</em> that this affects the calculation on trace lengths when they need to go through unequal amounts of vias (looking at you, pin 14 / pin 19 makeshift &ldquo;diff pair&rdquo; of HDMI&hellip;)</p>
+<p>Anyway. You open Wikipedia about HDMI, and you see there are some signals that are differential pairs (four, or five, it depends), and that they have a &ldquo;100 ohm impedance&rdquo;. You need to pass these signals from one connector to the other. In practice it will mean only that:</p>
+<ul>
+<li>the width of the traces is important,</li>
+<li>the distance between the traces is important,</li>
+<li>the distance from these traces to their ground is important,</li>
+<li>there should be no other copper somewhat &ldquo;close&rdquo; to the traces, or it will affect the impedance.</li>
+</ul>
+<p>The specific frequency of the signal that goes over the trace does not matter for layout; what matters is the characteristic impedance you are told the traces should have. And the characteristic impedance of the traces depends only on the above.</p>
+<p>I learned I should use the <a href="https://jlcpcb.com/pcb-impedance-calculator/">JLCPCB impedance calculator</a> that will apply the above rules. So I:</p>
+<ul>
+<li>entered 100 ohm as the number,</li>
+<li>set &ldquo;Differential Pair (Non coplanar)&rdquo; (which, as I understand, means &ldquo;no ground on the same layer around the tracks, or maybe somewhere far away&rdquo;, &mdash; basically, the signal couples only to the other reference ground layers, and not to the ground on the same layer),</li>
+<li>set &ldquo;Signal Layer&rdquo; to L1 and &ldquo;Bottom Ref&rdquo; to L2,</li>
+<li>set the &ldquo;Trace Spacing&rdquo; to 0.2 mm (something well within manufacturing capabilities),</li>
+<li>clicked &ldquo;Calculate&rdquo;,</li>
+<li><em>only then</em> specified the stackup (in my case, JLC04161H-7628, the most standard stackup you could want),<ul>
+<li>stackups specify the distances between the layers, the thickness of metal traces, and the dielectric properties of the layers, all very important to run the math right</li>
+</ul>
+</li>
+<li>I got &ldquo;0.2182 mm&rdquo; as the calculated width of the trace to use.</li>
+</ul>
+<p>There is an important assumption this calculator makes (at the time of writing). To quote <a href="https://jlcpcb.com/help/article/User-Guide-to-the-JLCPCB-Impedance-Calculator">JLCPCB&rsquo;s guide</a>:</p>
+<blockquote>
+<p>Results for 4- to 8-layer boards are calculated assuming Nan Ya Plastics NP-155F core material, and SYTECH S1000-2M for 10-layer boards and higher.</p>
+</blockquote>
+<p>Basically, when ordering the PCB, the right FR-4 material needs to be chosen in the configurator.</p>
+<p>The numbers from the calculator I had to put into KiCad&rsquo;s &ldquo;Net Classes&rdquo; table, specifically &mdash; the spacing into &ldquo;DP Gap&rdquo; and the width into &ldquo;DP Width&rdquo;.</p>
+<p>For the rest of the layout, well, the signal is &ldquo;high speed&rdquo;. I settled on the following set of high speed layout rules <em>for myself</em> (maybe too strict? maybe too relaxed? I don&rsquo;t know):</p>
+<ul>
+<li>Have a solid ground under the traces without any cuts or such. Many pictures on the Internet will illustrate that there is a magnetic field between the trace and the ground under it; for high speed signals a PCB is just a wave guide, don&rsquo;t make your wave spread out all around unnecessarily<ul>
+<li>Nice and simple is to have the signal on an outermost layer, and the ground for in on the layer immediately below it</li>
+<li>Remember what your stackup is. The distance between layers 1 and 2 on a 4-layer board is much, much less than between layers 2 and 3 (because this is where the thick core is). I recommend watching some videos from real-life design houses showing how PCBs get manufactured</li>
+</ul>
+</li>
+<li>Don&rsquo;t add any stubs to your high speed signal. I lack the education to give an explanation better than &ldquo;it would cause reflections, which will interfere with your signal&rdquo;; something-something water analogy.<ul>
+<li>If your connector is a through-hole connector: its legs are stubs! Flip either the signal or the connector accordingly</li>
+</ul>
+</li>
+<li>Don&rsquo;t just put your signal through lots of vias if it can be avoided<ul>
+<li>If you put it through a via, keep in mind where its ground is in relation; remember, wave guide</li>
+</ul>
+</li>
+<li>If a high-speed signal has to go above/below another signal, cross them at 90 degrees</li>
+<li>Don&rsquo;t add copper pours if there is no reason for them; don&rsquo;t add ground pours &ldquo;for good luck&rdquo;</li>
+</ul>
+<p>And for differential pairs:</p>
+<ul>
+<li>Match the lengths of the tracks of the pair; to length match, you add the wiggly things, also called &ldquo;serpentines&rdquo; or &ldquo;tuning patterns&rdquo;.</li>
+<li>The tuning patterns should be placed where the length mismatch is; if you imagine a wave going along the diffpair&rsquo;s length, the waves should be aligned on the two tracks across the majority of the pair&rsquo;s length.</li>
+<li>If there is some weirdness along the way (pads, capacitors, ESD protection diodes, vias to walk around), it needs to be symmetrical and in the same place along the diffpair&rsquo;s length.</li>
+<li>Be careful bending the diffpair. Bend it at 45 degrees only; segments between the bends should be at least ~1.5 times the width of a single track.</li>
+<li>A diff pair should be at least ~5 times the track width away from other copper on the same layer, and at the same time at least ~1.2 mm away from other copper on the same layer.</li>
+</ul>
+<p>Since this is a video signal, the three video lanes and the clock lane should also be all the same length.</p>
+<p>There are tolerances for all of the above, but don&rsquo;t expect the rest of the system to be perfect; for example, this box is supposed to sit between <em>two</em> HDMI cables, which are already notoriously unreliable. So try to design the PCB as well as you can anyway.</p>
+<p>I made some mistakes with this board, that turned out not to be impactful at all:</p>
+<ul>
+<li>I used the wrong type of FR-4. I was not aware of the NP-155F assumption, so it got produced with the standard TG135 material, which potentially has different dielectric properties, which meant the impedance of my lines is likely not 100 ohm.</li>
+<li>I connected all the grounds together. If there is common-mode noise on one of the pairs, it would basically influence other pairs since the return paths for common mode noise are now all connected together at the midpoint.</li>
+<li>I did not realize there is a secret diffpair on pins 14 and 19 (for HEC).</li>
+<li>I placed the HDMI connector too deep into the board, making the following enclosure look awkward.</li>
+</ul>
+<p>TODO: Show different revisions of the board.</p>
+<h3 id="interception">Interception<a class="headerlink" href="#interception" title="Permanent link">#</a></h3>
+<p>TODO: Find the saved traces and show different dumps with explanations of what we see.</p>
+<h3 id="injection">Injection<a class="headerlink" href="#injection" title="Permanent link">#</a></h3>
+<p>I2C is, in theory, multi-controller capable. There is even a super simple arbitration algorithm that is stemming naturally from the protocol (who sends all the first zeroes, wins).</p>
+<p>However, all controllers present on the bus need to respect the condition of losing the arbitration. They also need to respect when the bus is already occupied by some other communication.</p>
+<p>It can not be guaranteed that all computers that can be used with this box are supporting the above. Having more than one controller on DDC is not normal, and there is no reason to account for this possibility.</p>
+<p>Having several controllers on the DDC bus is, to my knowledge, not a supported case in any of the applicable VESA standards.</p>
+<p>Also, the Arduino Wire library is also, as per the Internet, not well performing in multi-controller setups.</p>
+<p>But none of that matters. It just&hellip; works: here comes the <a href="https://github.com/parport0/ddcci_injector">DDC/CI injector</a>.</p>
+<p>Since this is a device that is present on the I2C bus, it needs some pull-ups (as VESA DDC/CI v1.1 says, at least 2.2kOhm). In that device, they are part of the level shifter I had to use to translate from 5V of DDC/CI to 3.3V of the RP2040 board.</p>
+<p>The code is using the two cores of RP2040: one core is handling the UI (the rotary encoder with a button, the display, the LED), the other is handling the DDC communication (finding a monitor, losing a monitor, sending and receiving MCCS values).</p>
+<p>TODO: Find and type out the state machine.</p>
+<p>It still loses the connection to the monitor from time to time. But it recovers it pretty quickly, so it&rsquo;s OK. So far it did not cause any issues with actually setting up the monitor or using it for gaming or such.</p>
+<h3 id="dongle">Dongle<a class="headerlink" href="#dongle" title="Permanent link">#</a></h3>
+<p>TODO</p>
+<hr />
+<p><small>Except where otherwise noted, this content is licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY 4.0</a>; except for any code and code snippets, which are, except where otherwise noted, licensed under <a href="https://spdx.org/licenses/0BSD.html">0BSD</a>.</small></p>
+</body>
+</html>
