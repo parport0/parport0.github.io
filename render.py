@@ -5,11 +5,20 @@ html_header = """<!DOCTYPE html>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta property="og:title" content="{title}" />
+<meta property="og:description" content="{desc}" />
+<meta property="og:image" content="https://lp0.ink/apple-touch-icon.png" />
+<meta property="og:url" content="https://lp0.ink" />
+<meta property="og:type" content="article" />
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="manifest" href="/site.webmanifest">
 <link href="https://mastodon.social/@parport0" rel="me" />
+<title>{title}</title>
+"""
+
+html_style = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital@0;1&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Reddit+Mono&display=swap');
@@ -70,8 +79,8 @@ def to_html(name: str) -> str:
 def md_to_title(md: markdown.Markdown) -> str:
     return md.Meta['date'][0] + ". " + md.Meta['title'][0]
 
-def wrap_html(html: str) -> str:
-    return html_header + html + html_footer
+def wrap_html(html: str, title: str, desc: str) -> str:
+    return html_header.format(title=title, desc=desc) + html_style + html + html_footer
 
 markdown_exts = ['fenced_code', 'smarty', 'meta', 'toc']
 markdown_ext_configs = { 'toc': { 'permalink': '#' }}
@@ -96,8 +105,10 @@ for file in os.scandir():
         # Render the title of the page independently, I guess
         title_md = "# " + md_to_title(md) + "\n"
         up_md = "[(index)](/)\n"
+        format_title = md.Meta['title'][0]
+        format_date = md.Meta['date'][0]
         html = md.reset().convert(up_md + title_md) + html
-        html = wrap_html(html)
+        html = wrap_html(html, format_title, format_date)
 
         # "errors" and "encoding" -- from https://python-markdown.github.io/reference/
         with open(to_html(file.name), "w", encoding="utf-8", errors="xmlcharrefreplace") as output_file:
@@ -106,6 +117,6 @@ for file in os.scandir():
 toc_sorted = sorted(toc_entries.items(), reverse=True)
 toc_text = "".join(v for k, v in toc_sorted)
 toc_html = md.reset().convert(toc_text)
-toc_html = wrap_html(toc_html)
+toc_html = wrap_html(toc_html, "lp0.ink", "lp0.ink")
 with open("index.html", "w", encoding="utf-8", errors="xmlcharrefreplace") as output_file:
     output_file.write(toc_html)
