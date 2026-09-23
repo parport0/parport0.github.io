@@ -1,5 +1,5 @@
 Title: Reading DDC/CI with hardware without destroying any cable
-Date: 2026-04-11
+Date: 2026-09-21
 
 There were two triggers for this, both coming from my husband.
 
@@ -29,7 +29,7 @@ About the different standards, to put it short:
 * E-DDC (Enhanced-...) says where the I2C pins go on different connectors. It also explains one half of how to get the EDID, and what I2C address the monitor has for this (0x50 == 0xA0/0xA1)
 * E-EDID (Enhanced-...) explains the other half of how to get the EDID, and what EDID actually contains (monitor's name, physical size, supported modes, and mentions the possibility of extensions - one such extension is CTA-861, as an example)
 * DDC/CI (Command Interface) explains the basic bytes to send for "what controls do you have on this bus?" and "please set your 0x10 control to value of 0x64", including the I2C address of the monitor to use for this (0x37 == 0x6E/0x6F), and the checksums, lengths, and all that, of a data packet
-* MCCS (Monitor Control Command Set)  explains what the controls are, for example, that 0x10 is Luminance, or that "input source" is adjusted in basically the same way as "luminance", but with pre-defined values for "Analog video 1", "S-video 1", "Tuner 3", and even "DisplayPort 1" (no pre-defined value for "USB-C", and no, vendors don't use "DisplayPort 2" for it. They use random vendor-specific values)
+* MCCS (Monitor Control Command Set)  explains what the controls are, for example, that 0x10 is Luminance, or that "input source" is adjusted in basically the same way as "luminance", but with pre-defined values for "Analog video 1", "S-video 1", "Tuner 3", and even "DisplayPort 1" (no pre-defined value for "USB-C", and no, vendors don't use "DisplayPort 2" for it. They use random vendor-specific values). By the way, the official names for there "controls" are "VCP codes", VCP standing for "Virtual Control Panel". It is called this way because you can control them from the host. I don't get it either.
 
 All of these are at the time of writing available for free download from [the VESA standards website](https://vesa.org/vesa-standards/).
 
@@ -123,6 +123,7 @@ I have some dumps that can be loaded into Pulseview and analyzed with the EDID a
 * [Same machine, getting a monitor plugged in](/ddcci-capture-connection.csv)
 * [Same machine, setting brightness with ddcutil](/ddcci-capture-brightness-set.csv)
 * [Same machine, connecting a monitor without DDC/CI support](/ddcci-capture-simpler-monitor.csv)
+* [Same machine, getting the capabilities string](/ddcci-capture-capabilities.csv)
 
 The DDC/CI brightness writing action:
 
@@ -146,6 +147,28 @@ i2c-1: Data write: 82
 This is, in decimal, 42, because I set brightness to 42. But is it 42%? Or 42/256? Or 42/65536? MCCS says: "Increasing (decreasing) this value will increase (decrease) the Luminance of the image". In practice, it is usually percentages, but some monitors have different ideas. The dump also has the computer sending a Get VCP Feature and getting a reply for 0x10. The monitor does answer that the range for 0x10 is from 0x00 to 0x64 (decimal 100). So for this monitor, it is a number from 0 to 100.
 
 0x82 is the checksum (XOR of some of the bytes). This is from DDC/CI.
+
+#### Capabilities request and capabilities reply
+
+There is one more interesting bit I want to draw your attention to. The capabilities string.
+
+One of the dumps linked above is me running `ddcutil capabilities --disable-capabilities-cache`. Per DDC/CI, monitors should be able to report their capabilities when the Capabilities Request command is sent by sending a Capabilities Reply. The report is a string, final form of which is:
+
+```
+(prot(monitor)type(lcd)model(XG16AHP)cmds(01 02 03 07 0C F3)vcp(02 04 05 08 10 12 14(05 06 08 0B) 16 18 1A 52 60(11 13) 62 72(50 78 96) 86(01 02 0B) 87(00 0A 14 1E 28 32 3C 46 50 5A 64) 8A AA(01 02 03 04 FF) AC AE B6 C6 C8 CC(01 02 03 04 05 06 07 08 09 0A 0C 0D 11 12 14 1A 1E 1F 30 23 31) D6(01 05) DF DC(03 0B 0D 0E 11 12 13 14) E2(00 01 02 03 04 05) E4(00 01) E6(00 01) E9(00 01) EA(00 01) EB(00 01) EC(00 01 02 03 04 05 06) EE(00 1E 28 32 3C 5A) EF(00 01 02 03) F0(00 01 02 03 04) F6(00 01 02)) mccs_ver(2.2))
+```
+
+Yeah. The monitor is sending ASCII bytes that get decoded into a string containing hex representations of different supported capabilities, with parentheses parsing on top.
+
+For example, the `(vcp(10))` part means that VCP capability 0x10 is supported by the monitor.
+
+ddcutil, for one, [does not use the capabilities string](https://www.ddcutil.com/command_capabilities/) at the time of writing. Some monitors don't say their full capabilities in that string.
+
+Other great part is the format of the requests and replies. It is fragmented. The host's request contains an offset from which the next fragment of the capabilites string should start. The monitor has the right to decide the length of the fragment it sends. The length of the fragment is there in the header of the packet. The DDC/CI standard also says: `If the display has reached end-of-string, it shall send a fragment with the next offset but zero data bytes. This will indicate an end of string.` Do you think it is universally interpreted as "the length in the capabilities reply packet's header is set to 0"? _No_. Monitors out there send literal `0x00` bytes. Full 32-byte fragments of them.
+
+Here is a starter if you would like to look at the capabilities request csv dump.
+
+`sigrok-cli -I csv:header=yes:column_formats=t,l,l -P i2c -A i2c=address-read:data-read -i ddcci-capture-capabilities.csv | gawk '/Address read/ { if (valid) print ""; count = 0; valid = 0 } /Data read/ { count++; if (count == 1) { l = strtonum("0x" $NF) } if (count == 3) { if (tolower($NF) == "e3") valid = 1 } if (count == 4) { offset = strtonum("0x" $NF) * 256 } if (valid && count == 5) { offset = offset + strtonum("0x" $NF); printf "Length: %d Offset: %d\n", l, offset } if (valid && count > 5) { num = strtonum("0x" $NF); if (num >= 20) if (num < 127) { printf "%c", num; s = substr(s, 1, offset) sprintf("%c", strtonum("0x" $NF)) substr(s, offset + 2); offset++ } } } END { print s }'`
 
 ### Injection
 
