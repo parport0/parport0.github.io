@@ -207,3 +207,6 @@ Since the dongle is, technically, either a DVI device that uses HDMI housings, o
 Work in progress hardware devices are on my Github, for example: [displayport\_aux\_checkpoint](https://github.com/parport0/displayport_aux_checkpoint).
 
 <img src="ddcci-devices.jpg" class="illustration" />
+
+<img src="ddcci-dongle-in-monitor.jpg" class="illustration" />
+<img src="ddcci-dongle-knob.jpg" class="illustration" />
